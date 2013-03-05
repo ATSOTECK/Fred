@@ -1,6 +1,6 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2013-03-02T18:55:11
+# Project created by QtCreator 2013-03-05T11:00:58
 #
 #-------------------------------------------------
 
@@ -13,11 +13,8 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
-    Camera.cpp
+        mainwindow.cpp
 
-HEADERS  += mainwindow.h \
-    Camera.h \
-    videoSettings.h
+HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui

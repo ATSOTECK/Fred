@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include "Camera.h"
 
 namespace Ui {
 class MainWindow;
@@ -18,8 +17,6 @@ public:
     
 private:
     Ui::MainWindow *ui;
-
-    Camera *camera;
 };
 
 #endif // MAINWINDOW_H
