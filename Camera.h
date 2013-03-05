@@ -27,6 +27,10 @@ public:
         return cameraDevice;
     }
 
+    void setCameraDevice(QByteArray c) {
+        cameraDevice = c;
+    }
+
 private slots:
     void setCamera(const QByteArray &cameraDevice);
 
