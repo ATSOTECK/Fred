@@ -18,3 +18,10 @@ SOURCES += main.cpp\
 HEADERS  += mainwindow.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    res.qrc
+
+DEPENDPATH += .
+INCLUDEPATH += /opt/local/include
+LIBS += -L/opt/local/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc

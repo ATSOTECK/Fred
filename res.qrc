@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Images/stop.png</file>
+        <file>Images/webcam_add.png</file>
+        <file>Images/webcam_delete.png</file>
+        <file>Images/webcam_error.png</file>
+        <file>Images/webcam.png</file>
+        <file>Images/run.png</file>
+        <file>Images/clipboard_empty.png</file>
+        <file>Images/clipboard.png</file>
+        <file>Images/color_adjustment_blue.png</file>
+        <file>Images/color_adjustment_green.png</file>
+        <file>Images/color_adjustment_red.png</file>
+        <file>Images/color_adjustment.png</file>
+        <file>Images/color_management.png</file>
+        <file>Images/color_wheel.png</file>
+        <file>Images/document_empty.png</file>
+    </qresource>
+</RCC>
