@@ -48,6 +48,8 @@ private:
     QTimer *timer;
 
     ColorThresholdDialog *thresholdDiablog;
+
+    int rMin, gMin, bMin, rMax, gMax, bMax;
 };
 
 #endif // MAINWINDOW_H

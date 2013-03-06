@@ -44,6 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->originalImage->setScaledContents(true);
     ui->processedImage->setScaledContents(true);
 
+    rMin = gMin = bMin = 0;
+    rMax = gMax = bMax = 255;
+
     camera.open(0);
 
     if (camera.isOpened() == false) {
@@ -67,7 +70,8 @@ void MainWindow::processFrameAndUpdateGUI() {
         return;
     }
 
-    cv::inRange(matOriginal, cv::Scalar(0, 120, 0), cv::Scalar(170, 256, 40), matProcessed);
+    //0, 120, 0     170, 256, 40 for the green thing
+    cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
     cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
     cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10 , 400);
 
@@ -119,6 +123,13 @@ void MainWindow::thresholdClicked() {
     if (thresholdDiablog->isHidden() == false) {
         //ui->thresholdDock->setHidden(false);
         thresholdDiablog->close();
+
+        this->rMin = thresholdDiablog->rMin;
+        this->gMin = thresholdDiablog->gMin;
+        this->bMin = thresholdDiablog->bMin;
+        this->rMax = thresholdDiablog->rMax;
+        this->gMax = thresholdDiablog->gMax;
+        this->bMax = thresholdDiablog->bMax;
     } else {
         //ui->thresholdDock->setHidden(true);
         thresholdDiablog->show();

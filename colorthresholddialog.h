@@ -15,6 +15,8 @@ public:
     explicit ColorThresholdDialog(QWidget *parent = 0);
     ~ColorThresholdDialog();
 
+    int rMin, gMin, bMin, rMax, gMax, bMax;
+
 private slots:
     void changeRMinLabel();
     void changeGMinLabel();
