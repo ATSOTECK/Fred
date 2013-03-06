@@ -8,6 +8,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "colorthresholddialog.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -26,6 +28,7 @@ public slots:
 private slots:
     void pauseButtonClicked();
     void thresholdClicked();
+    void hideThreshold();
     void clearConsoleClicked();
 
 private:
@@ -43,6 +46,8 @@ private:
     std::vector<cv::Vec3f>::iterator itrCircles;
 
     QTimer *timer;
+
+    ColorThresholdDialog *thresholdDiablog;
 };
 
 #endif // MAINWINDOW_H

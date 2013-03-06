@@ -33,6 +33,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionThreshold, SIGNAL(triggered()), this, SLOT(thresholdClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
 
+    thresholdDiablog = new ColorThresholdDialog(this);
+
+    connect(thresholdDiablog, SIGNAL(accepted()), this, SLOT(hideThreshold()));
+
     ui->thresholdDock->close();
     //ui->originalImage->close();
     ui->pauseButton->close();
@@ -108,11 +112,22 @@ void MainWindow::pauseButtonClicked() {
 }
 
 void MainWindow::thresholdClicked() {
-    if (ui->thresholdDock->isHidden()) {
-        ui->thresholdDock->setHidden(false);
-    } else {
-        ui->thresholdDock->setHidden(true);
+    if (!thresholdDiablog) {
+        thresholdDiablog = new ColorThresholdDialog(this);
     }
+
+    if (thresholdDiablog->isHidden() == false) {
+        //ui->thresholdDock->setHidden(false);
+        thresholdDiablog->close();
+    } else {
+        //ui->thresholdDock->setHidden(true);
+        thresholdDiablog->show();
+    }
+}
+
+void MainWindow::hideThreshold() {
+    thresholdDiablog->close();
+    ui->actionThreshold->setChecked(false);
 }
 
 void MainWindow::clearConsoleClicked() {

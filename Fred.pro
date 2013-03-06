@@ -13,11 +13,14 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    colorthresholddialog.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    colorthresholddialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    colorthresholddialog.ui
 
 RESOURCES += \
     res.qrc
