@@ -12,6 +12,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "colorthresholddialog.h"
+#include "histogramdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -35,6 +36,7 @@ private slots:
     void hideThreshold();
     void clearConsoleClicked();
     void showToolbarClicked();
+    void showHistogramClicked();
 
     void save();
     void load();
@@ -56,6 +58,7 @@ private:
     QTimer *timer;
 
     ColorThresholdDialog *thresholdDiablog;
+    HistogramDialog *histogramDialog;
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
     int timerTime;

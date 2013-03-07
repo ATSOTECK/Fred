@@ -14,14 +14,16 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    colorthresholddialog.cpp
+    colorthresholddialog.cpp \
+    histogramdialog.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
-    Histogram.h
+    histogramdialog.h
 
 FORMS    += mainwindow.ui \
-    colorthresholddialog.ui
+    colorthresholddialog.ui \
+    histogramdialog.ui
 
 RESOURCES += \
     res.qrc

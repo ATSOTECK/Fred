@@ -29,12 +29,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(pauseButtonClicked()));
 
     connect(ui->actionThreshold, SIGNAL(triggered()), this, SLOT(thresholdClicked()));
+    connect(ui->actionHistogram, SIGNAL(triggered()), this, SLOT(showHistogramClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
 
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(load()));
 
     thresholdDiablog = new ColorThresholdDialog(this);
+    histogramDialog = new HistogramDialog(this);
 
     connect(thresholdDiablog, SIGNAL(updateMainWindowTreshold()), this, SLOT(updateThreshold()));
     connect(ui->actionToolbar, SIGNAL(triggered()), this, SLOT(showToolbarClicked()));
@@ -129,13 +131,15 @@ void MainWindow::processFrameAndUpdateGUI() {
     cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10 , 400);
 
     for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
-        ui->console->appendPlainText("ball position x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
+        ui->console->appendPlainText("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
                 ", y =" + QString::number((*itrCircles)[1]).rightJustified(4, ' ') +
                 ", radius =" + QString::number((*itrCircles)[2], 'f', 3).rightJustified(7, ' '));
 
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
     }
+
+    histogramDialog->updatHistogram(matOriginal);
 
     cv::cvtColor(matOriginal, matOriginal, CV_BGR2RGB);
 
@@ -216,5 +220,13 @@ void MainWindow::showToolbarClicked() {
         ui->mainToolBar->show();
     } else {
         ui->mainToolBar->hide();
+    }
+}
+
+void MainWindow::showHistogramClicked() {
+    if (histogramDialog->isHidden()) {
+        histogramDialog->show();
+    } else {
+        histogramDialog->hide();
     }
 }
