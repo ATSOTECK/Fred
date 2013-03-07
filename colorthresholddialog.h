@@ -2,6 +2,8 @@
 #define COLORTHRESHOLDDIALOG_H
 
 #include <QDialog>
+#include <QBrush>
+#include <QPen>
 
 namespace Ui {
 class ColorThresholdDialog;
@@ -17,6 +19,11 @@ public:
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
 
+    void updateSliders();
+
+signals:
+    void updateMainWindowTreshold();
+
 private slots:
     void changeRMinLabel();
     void changeGMinLabel();
@@ -24,8 +31,13 @@ private slots:
     void changeRMaxLabel();
     void changeGMaxLabel();
     void changeBMaxLabel();
+
+protected:
+    void paintEvent(QPaintEvent *e);
     
 private:
+    QBrush brush;
+
     Ui::ColorThresholdDialog *ui;
 };
 

@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <QToolButton>
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -33,9 +31,14 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionThreshold, SIGNAL(triggered()), this, SLOT(thresholdClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
 
+    connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
+    connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(load()));
+
     thresholdDiablog = new ColorThresholdDialog(this);
 
-    connect(thresholdDiablog, SIGNAL(accepted()), this, SLOT(hideThreshold()));
+    connect(thresholdDiablog, SIGNAL(updateMainWindowTreshold()), this, SLOT(updateThreshold()));
+    connect(ui->actionToolbar, SIGNAL(triggered()), this, SLOT(showToolbarClicked()));
+    ui->actionToolbar->setChecked(true);
 
     ui->thresholdDock->close();
     //ui->originalImage->close();
@@ -47,6 +50,8 @@ MainWindow::MainWindow(QWidget *parent) :
     rMin = gMin = bMin = 0;
     rMax = gMax = bMax = 255;
 
+    timerTime = 16;
+
     camera.open(0);
 
     if (camera.isOpened() == false) {
@@ -56,11 +61,49 @@ MainWindow::MainWindow(QWidget *parent) :
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
-    timer->start(20);
+    timer->start(timerTime);
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::save() {
+    QString dir = QFileDialog::getSaveFileName(this, "Save...", "", "*.fred", 0, 0);
+    QFile file(dir);
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        ui->console->appendPlainText("Error opening file for save.");
+        return;
+    }
+
+    QDataStream out(&file);
+    out.setVersion(QDataStream::Qt_5_0);
+    out << thresholdDiablog->rMin << thresholdDiablog->gMin << thresholdDiablog->bMin << thresholdDiablog->rMax
+        << thresholdDiablog->gMax << thresholdDiablog->bMax << timerTime;
+
+    file.flush();
+    file.close();
+}
+
+void MainWindow::load() {
+    QString dir = QFileDialog::getOpenFileName(this, "Open...", "", "*.fred", 0, 0);
+    QFile file(dir);
+
+    if (!file.open(QIODevice::ReadOnly)) {
+        ui->console->appendPlainText("Error opening file for reading.");
+        return;
+    }
+
+    QDataStream in(&file);
+    in.setVersion(QDataStream::Qt_5_0);
+    in >> thresholdDiablog->rMin >> thresholdDiablog->gMin >> thresholdDiablog->bMin >> thresholdDiablog->rMax
+        >> thresholdDiablog->gMax >> thresholdDiablog->bMax >> timerTime;
+
+    thresholdDiablog->updateSliders();
+    updateThreshold();
+
+    file.close();
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
@@ -104,7 +147,7 @@ void MainWindow::pauseButtonClicked() {
 
         ui->console->appendPlainText("Pausing");
     } else {
-        timer->start(20);
+        timer->start(timerTime);
 
         ui->pauseButton->setText("Pause");
 
@@ -136,6 +179,19 @@ void MainWindow::thresholdClicked() {
     }
 }
 
+void MainWindow::updateThreshold() {
+    this->rMin = thresholdDiablog->rMin;
+    this->gMin = thresholdDiablog->gMin;
+    this->bMin = thresholdDiablog->bMin;
+    this->rMax = thresholdDiablog->rMax;
+    this->gMax = thresholdDiablog->gMax;
+    this->bMax = thresholdDiablog->bMax;
+
+    if (ui->actionThreshold->isChecked()) {
+        ui->actionThreshold->setChecked(false);
+    }
+}
+
 void MainWindow::hideThreshold() {
     thresholdDiablog->close();
     ui->actionThreshold->setChecked(false);
@@ -143,4 +199,12 @@ void MainWindow::hideThreshold() {
 
 void MainWindow::clearConsoleClicked() {
     ui->console->setPlainText("Clear console");
+}
+
+void MainWindow::showToolbarClicked() {
+    if(ui->mainToolBar->isHidden()) {
+        ui->mainToolBar->show();
+    } else {
+        ui->mainToolBar->hide();
+    }
 }

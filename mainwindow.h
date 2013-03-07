@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QFile>
+#include <QToolButton>
+#include <QFileDialog>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,12 +27,17 @@ public:
 
 public slots:
     void processFrameAndUpdateGUI();
+    void updateThreshold();
     
 private slots:
     void pauseButtonClicked();
     void thresholdClicked();
     void hideThreshold();
     void clearConsoleClicked();
+    void showToolbarClicked();
+
+    void save();
+    void load();
 
 private:
     Ui::MainWindow *ui;
@@ -50,6 +58,7 @@ private:
     ColorThresholdDialog *thresholdDiablog;
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
+    int timerTime;
 };
 
 #endif // MAINWINDOW_H

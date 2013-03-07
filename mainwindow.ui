@@ -132,6 +132,7 @@
      <string>View</string>
     </property>
     <addaction name="actionThreshold"/>
+    <addaction name="actionToolbar"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -151,6 +152,9 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actionSave"/>
+   <addaction name="actionOpen"/>
+   <addaction name="separator"/>
    <addaction name="actionStart"/>
    <addaction name="actionPause"/>
    <addaction name="separator"/>
@@ -225,7 +229,7 @@
   <action name="actionClear_console">
    <property name="icon">
     <iconset resource="res.qrc">
-     <normaloff>:/Images/document_empty.png</normaloff>:/Images/document_empty.png</iconset>
+     <normaloff>:/Images/toster.png</normaloff>:/Images/toster.png</iconset>
    </property>
    <property name="text">
     <string>Clear console</string>
@@ -235,6 +239,10 @@
    </property>
   </action>
   <action name="actionSave">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/Images/save.png</normaloff>:/Images/save.png</iconset>
+   </property>
    <property name="text">
     <string>Save</string>
    </property>
@@ -243,6 +251,10 @@
    </property>
   </action>
   <action name="actionNew">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/Images/document_empty.png</normaloff>:/Images/document_empty.png</iconset>
+   </property>
    <property name="text">
     <string>New</string>
    </property>
@@ -251,6 +263,10 @@
    </property>
   </action>
   <action name="actionOpen">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/Images/open.png</normaloff>:/Images/open.png</iconset>
+   </property>
    <property name="text">
     <string>Open</string>
    </property>
@@ -264,6 +280,14 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionToolbar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Toolbar</string>
    </property>
   </action>
  </widget>
