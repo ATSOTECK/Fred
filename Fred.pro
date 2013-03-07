@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     colorthresholddialog.cpp
 
 HEADERS  += mainwindow.h \
-    colorthresholddialog.h
+    colorthresholddialog.h \
+    Histogram.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui

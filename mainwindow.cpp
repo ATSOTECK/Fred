@@ -70,6 +70,11 @@ MainWindow::~MainWindow() {
 
 void MainWindow::save() {
     QString dir = QFileDialog::getSaveFileName(this, "Save...", "", "*.fred", 0, 0);
+
+    if (dir.isEmpty()) {
+        return;
+    }
+
     QFile file(dir);
 
     if (!file.open(QIODevice::WriteOnly)) {
@@ -88,6 +93,11 @@ void MainWindow::save() {
 
 void MainWindow::load() {
     QString dir = QFileDialog::getOpenFileName(this, "Open...", "", "*.fred", 0, 0);
+
+    if (dir.isEmpty()) {
+        return;
+    }
+
     QFile file(dir);
 
     if (!file.open(QIODevice::ReadOnly)) {
