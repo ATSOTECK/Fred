@@ -21,5 +21,6 @@
         <file>Images/save.png</file>
         <file>Images/save_as.png</file>
         <file>Images/toster.png</file>
+        <file>Images/loading.png</file>
     </qresource>
 </RCC>
