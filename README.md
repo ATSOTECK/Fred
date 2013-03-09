@@ -1,4 +1,4 @@
 Fred
 ====
 
-Program to get coordinates from an image.
+Program to get coordinates from an image. Or something like that...
