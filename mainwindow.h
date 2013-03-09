@@ -52,6 +52,8 @@ private:
     cv::Mat matOriginal;
     cv::Mat matProcessed;
     cv::Mat matOutline;
+    cv::Mat matGray;
+    cv::Mat matDetectedEdges;
 
     QImage qimgOriginal;
     QImage qimgProcessed;
@@ -66,7 +68,7 @@ private:
     HistogramDialog *histogramDialog;
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
-    int timerTime, ncams;
+    int timerTime, ncams, kernelSize;
 };
 
 #endif // MAINWINDOW_H

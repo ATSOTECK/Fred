@@ -15,15 +15,18 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     colorthresholddialog.cpp \
-    histogramdialog.cpp
+    histogramdialog.cpp \
+    outlinedialog.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
-    histogramdialog.h
+    histogramdialog.h \
+    outlinedialog.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
-    histogramdialog.ui
+    histogramdialog.ui \
+    outlinedialog.ui
 
 RESOURCES += \
     res.qrc

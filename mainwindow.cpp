@@ -71,6 +71,8 @@ MainWindow::MainWindow(QWidget *parent) :
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
     //timer->start(timerTime);
+
+    kernelSize = 3;
 }
 
 MainWindow::~MainWindow() {
@@ -160,15 +162,31 @@ void MainWindow::processFrameAndUpdateGUI() {
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
     }
 
+    //histogram
     histogramDialog->updatHistogram(matOriginal);
 
+    //outline
+    matOutline.create(matOriginal.size(), matOriginal.type());
+
+    cv::cvtColor(matOriginal, matGray, CV_BGR2GRAY);
+
+    cv::blur(matGray, matDetectedEdges, cv::Size(3, 3));
+
+    cv::Canny(matDetectedEdges, matDetectedEdges, 1, 1 * 3, kernelSize);
+
+    matOutline = cv::Scalar::all(0);
+
+    matOriginal.copyTo(matOutline, matDetectedEdges);
+
+    //convert and display
     cv::cvtColor(matOriginal, matOriginal, CV_BGR2RGB);
 
     QImage qimgOriginal((uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
     QImage qimgProcessed((uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8);
+    QImage qimgOutline((uchar*)matOutline.data, matOutline.cols, matOutline.rows, matOutline.step, QImage::Format_Indexed8);
 
     ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
-    ui->processedImage->setPixmap(QPixmap::fromImage(qimgProcessed));
+    ui->processedImage->setPixmap(QPixmap::fromImage(qimgOutline));
 }
 
 void MainWindow::pauseButtonClicked() {
