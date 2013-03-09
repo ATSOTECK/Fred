@@ -9,6 +9,7 @@
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "colorthresholddialog.h"
@@ -25,6 +26,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+
+    int getCamCount();
 
 public slots:
     void processFrameAndUpdateGUI();
@@ -48,9 +51,11 @@ private:
 
     cv::Mat matOriginal;
     cv::Mat matProcessed;
+    cv::Mat matOutline;
 
     QImage qimgOriginal;
     QImage qimgProcessed;
+    QImage qimgOutline;
 
     std::vector<cv::Vec3f> vecCircles;
     std::vector<cv::Vec3f>::iterator itrCircles;
@@ -61,7 +66,7 @@ private:
     HistogramDialog *histogramDialog;
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
-    int timerTime;
+    int timerTime, ncams;
 };
 
 #endif // MAINWINDOW_H

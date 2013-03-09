@@ -9,13 +9,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->console->appendPlainText("Starting...");
 
-    ui->actionStart->setDisabled(true);
+    //ui->actionStart->setDisabled(true);
+    ui->actionPause->setDisabled(true);
+
+    ncams = this->getCamCount();
 
     QMenu *devicesMenu = new QMenu();
-    QAction *testAction = new QAction("test item", this);
-    QAction *testAction1 = new QAction("another test item", this);
-    devicesMenu->addAction(testAction);
-    devicesMenu->addAction(testAction1);
+    for (int i = 0; i <= ncams; i++) {
+        QAction *testAction = new QAction("Camera: " + QString::number(i), this);
+        devicesMenu->addAction(testAction);
+    }
+    //QAction *testAction = new QAction("test item", this);
+    //QAction *testAction1 = new QAction("another test item", this);
+    //devicesMenu->addAction(testAction);
+    //devicesMenu->addAction(testAction1);
 
     QToolButton *devicesButton = new QToolButton();
     devicesButton->setIcon(QIcon(":/Images/webcam.png"));
@@ -63,11 +70,25 @@ MainWindow::MainWindow(QWidget *parent) :
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
-    timer->start(timerTime);
+    //timer->start(timerTime);
 }
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+int MainWindow::getCamCount() {
+    CvCapture *cap;
+    int ncams = 0;
+    while (true) {
+        cap = cvCreateCameraCapture(ncams++);
+        if (cap == NULL)
+            break;
+        cvReleaseCapture(&cap);
+    }
+
+    cvReleaseCapture(&cap);
+    return (ncams - 1);
 }
 
 void MainWindow::save() {
@@ -151,7 +172,7 @@ void MainWindow::processFrameAndUpdateGUI() {
 }
 
 void MainWindow::pauseButtonClicked() {
-    if (ui->pauseButton->text() == "Pause") {
+    if (!ui->actionStart->isEnabled()) {
         timer->stop();
 
         ui->pauseButton->setText("Resume");

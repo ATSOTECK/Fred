@@ -160,6 +160,7 @@
    <addaction name="actionPause"/>
    <addaction name="separator"/>
    <addaction name="actionThreshold"/>
+   <addaction name="actionHistogram"/>
    <addaction name="actionClear_console"/>
    <addaction name="separator"/>
   </widget>
@@ -292,6 +293,10 @@
    </property>
   </action>
   <action name="actionHistogram">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/Images/diagramm.png</normaloff>:/Images/diagramm.png</iconset>
+   </property>
    <property name="text">
     <string>Histogram</string>
    </property>
