@@ -14,6 +14,13 @@ class OutlineDialog : public QDialog
 public:
     explicit OutlineDialog(QWidget *parent = 0);
     ~OutlineDialog();
+
+    int getSliderValue();
+
+    void setLabelPixmap(QImage p);
+
+private slots:
+    void updateLabel();
     
 private:
     Ui::OutlineDialog *ui;

@@ -14,6 +14,7 @@
 
 #include "colorthresholddialog.h"
 #include "histogramdialog.h"
+#include "outlinedialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -40,11 +41,14 @@ private slots:
     void clearConsoleClicked();
     void showToolbarClicked();
     void showHistogramClicked();
+    void showOutlineClicked();
 
     void save();
     void load();
 
 private:
+    void doOutline();
+
     Ui::MainWindow *ui;
 
     cv::VideoCapture camera;
@@ -66,6 +70,7 @@ private:
 
     ColorThresholdDialog *thresholdDiablog;
     HistogramDialog *histogramDialog;
+    OutlineDialog *outlineDialog;
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
     int timerTime, ncams, kernelSize;

@@ -134,6 +134,7 @@
     <addaction name="actionThreshold"/>
     <addaction name="actionToolbar"/>
     <addaction name="actionHistogram"/>
+    <addaction name="actionOutline"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -299,6 +300,11 @@
    </property>
    <property name="text">
     <string>Histogram</string>
+   </property>
+  </action>
+  <action name="actionOutline">
+   <property name="text">
+    <string>Outline</string>
    </property>
   </action>
  </widget>
