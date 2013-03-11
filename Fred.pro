@@ -16,17 +16,20 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     colorthresholddialog.cpp \
     histogramdialog.cpp \
-    outlinedialog.cpp
+    outlinedialog.cpp \
+    squaredialog.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
     histogramdialog.h \
-    outlinedialog.h
+    outlinedialog.h \
+    squaredialog.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
     histogramdialog.ui \
-    outlinedialog.ui
+    outlinedialog.ui \
+    squaredialog.ui
 
 RESOURCES += \
     res.qrc

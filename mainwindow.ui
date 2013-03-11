@@ -135,6 +135,7 @@
     <addaction name="actionToolbar"/>
     <addaction name="actionHistogram"/>
     <addaction name="actionOutline"/>
+    <addaction name="actionSquares"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -305,6 +306,11 @@
   <action name="actionOutline">
    <property name="text">
     <string>Outline</string>
+   </property>
+  </action>
+  <action name="actionSquares">
+   <property name="text">
+    <string>Squares</string>
    </property>
   </action>
  </widget>
