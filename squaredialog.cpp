@@ -5,11 +5,14 @@ SquareDialog::SquareDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SquareDialog),
     threshold(50),
-    N(11)
+    N(1)
 {
     ui->setupUi(this);
 
     ui->squareLbl->setScaledContents(true);
+
+    connect(ui->thresholdSlider, SIGNAL(valueChanged(int)), this, SLOT(updateLabel()));
+    updateLabel();
 }
 
 SquareDialog::~SquareDialog() {
@@ -25,6 +28,7 @@ double SquareDialog::angle(cv::Point p1, cv::Point p2, cv::Point p0) {
 }
 
 void SquareDialog::findSquares(const cv::Mat &img, std::vector<std::vector<cv::Point> > &squares) {
+    threshold = ui->thresholdSlider->value();
     squares.clear();
 
     cv::Mat pyr, timg, gray0(img.size(), CV_8U), gray;
@@ -37,7 +41,7 @@ void SquareDialog::findSquares(const cv::Mat &img, std::vector<std::vector<cv::P
     //find squares in every color plane of the image
     for (int c = 0; c < 3; c++) {
         int ch[] = {c, 0};
-        cv::mixChannels(&timg, 1, &gray0, 1, ch, 1);
+        //cv::mixChannels(&timg, 1, &gray0, 1, ch, 1);
 
         //try several threshold levels
         for (int l = 0; l < N; l++) {
@@ -92,4 +96,8 @@ void SquareDialog::drawSquares(cv::Mat &img, const std::vector<std::vector<cv::P
     QImage qimg((uchar*)img.data, img.cols, img.rows, img.step, QImage::Format_RGB888);
 
     ui->squareLbl->setPixmap(QPixmap::fromImage(qimg));
+}
+
+void SquareDialog::updateLabel() {
+    ui->label->setText(QString::number(ui->thresholdSlider->value()).rightJustified(3, '0'));
 }

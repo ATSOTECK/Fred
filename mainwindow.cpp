@@ -154,9 +154,9 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
 
     //histogram
-    histogramDialog->updatHistogram(matOriginal);
+    //histogramDialog->updatHistogram(matOriginal);
 
-    doOutline();
+    //doOutline();
 
     //squaresDialog->findSquares(matDetectedEdges, squares);
     //squaresDialog->drawSquares(matOriginal, squares);

@@ -17,7 +17,7 @@ class SquareDialog : public QDialog
 {
     Q_OBJECT
 
-    double angle(cv::Point p1, cv::Point p2, cv::Point p0);
+    static double angle(cv::Point p1, cv::Point p2, cv::Point p0);
     
 public:
     explicit SquareDialog(QWidget *parent = 0);
@@ -25,6 +25,9 @@ public:
 
     void findSquares(const cv::Mat &img, std::vector<std::vector<cv::Point> >&squares);
     void drawSquares(cv::Mat &img, const std::vector<std::vector<cv::Point> >&squares);
+
+private slots:
+    void updateLabel();
     
 private:
     Ui::SquareDialog *ui;
