@@ -39,6 +39,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionThreshold, SIGNAL(triggered()), this, SLOT(thresholdClicked()));
     connect(ui->actionHistogram, SIGNAL(triggered()), this, SLOT(showHistogramClicked()));
     connect(ui->actionOutline, SIGNAL(triggered()), this, SLOT(showOutlineClicked()));
+    connect(ui->actionSquares, SIGNAL(triggered()), this, SLOT(showSquaresClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
 
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
@@ -47,6 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
     thresholdDiablog = new ColorThresholdDialog(this);
     histogramDialog = new HistogramDialog(this);
     outlineDialog = new OutlineDialog(this);
+    squaresDialog = new SquareDialog(this);
 
     connect(thresholdDiablog, SIGNAL(updateMainWindowTreshold()), this, SLOT(updateThreshold()));
     connect(ui->actionToolbar, SIGNAL(triggered()), this, SLOT(showToolbarClicked()));
@@ -62,7 +64,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rMin = gMin = bMin = 0;
     rMax = gMax = bMax = 255;
 
-    timerTime = 16;
+    timerTime = 500;
 
     camera.open(0);
 
@@ -151,9 +153,12 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
 
     //histogram
-    histogramDialog->updatHistogram(matOriginal);
+    //histogramDialog->updatHistogram(matOriginal);
 
-    doOutline();
+    squaresDialog->findSquares(matOriginal, squares);
+    squaresDialog->drawSquares(matOriginal, squares);
+
+    //doOutline();
 
     //0, 120, 0     170, 256, 40 for the green thing
     cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
@@ -285,5 +290,13 @@ void MainWindow::showOutlineClicked() {
         outlineDialog->show();
     } else {
         outlineDialog->hide();
+    }
+}
+
+void MainWindow::showSquaresClicked() {
+    if (squaresDialog->isHidden()) {
+        squaresDialog->show();
+    } else {
+        squaresDialog->hide();
     }
 }

@@ -15,6 +15,7 @@
 #include "colorthresholddialog.h"
 #include "histogramdialog.h"
 #include "outlinedialog.h"
+#include "squaredialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -42,6 +43,7 @@ private slots:
     void showToolbarClicked();
     void showHistogramClicked();
     void showOutlineClicked();
+    void showSquaresClicked();
 
     void save();
     void load();
@@ -71,9 +73,12 @@ private:
     ColorThresholdDialog *thresholdDiablog;
     HistogramDialog *histogramDialog;
     OutlineDialog *outlineDialog;
+    SquareDialog *squaresDialog;
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
     int timerTime, ncams, kernelSize;
+
+    std::vector<std::vector<cv::Point> > squares;
 };
 
 #endif // MAINWINDOW_H

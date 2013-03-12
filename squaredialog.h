@@ -2,21 +2,34 @@
 #define SQUAREDIALOG_H
 
 #include <QDialog>
+#include <math.h>
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/highgui/highgui_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
 
 namespace Ui {
-class squareDialog;
+class SquareDialog;
 }
 
-class squareDialog : public QDialog
+class SquareDialog : public QDialog
 {
     Q_OBJECT
+
+    double angle(cv::Point p1, cv::Point p2, cv::Point p0);
     
 public:
-    explicit squareDialog(QWidget *parent = 0);
-    ~squareDialog();
+    explicit SquareDialog(QWidget *parent = 0);
+    ~SquareDialog();
+
+    void findSquares(const cv::Mat &img, std::vector<std::vector<cv::Point> >&squares);
+    void drawSquares(cv::Mat &img, const std::vector<std::vector<cv::Point> >&squares);
     
 private:
-    Ui::squareDialog *ui;
+    Ui::SquareDialog *ui;
+
+    int threshold, N;
 };
 
 #endif // SQUAREDIALOG_H
