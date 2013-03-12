@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 0; i <= ncams; i++) {
         QAction *testAction = new QAction("Camera: " + QString::number(i), this);
         devicesMenu->addAction(testAction);
+        ui->menuDevices->addAction(testAction);
     }
     //QAction *testAction = new QAction("test item", this);
     //QAction *testAction1 = new QAction("another test item", this);
@@ -64,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     rMin = gMin = bMin = 0;
     rMax = gMax = bMax = 255;
 
-    timerTime = 500;
+    timerTime = 16;
 
     camera.open(0);
 
@@ -153,12 +154,12 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
 
     //histogram
-    //histogramDialog->updatHistogram(matOriginal);
+    histogramDialog->updatHistogram(matOriginal);
 
-    squaresDialog->findSquares(matOriginal, squares);
-    squaresDialog->drawSquares(matOriginal, squares);
+    doOutline();
 
-    //doOutline();
+    //squaresDialog->findSquares(matDetectedEdges, squares);
+    //squaresDialog->drawSquares(matOriginal, squares);
 
     //0, 120, 0     170, 256, 40 for the green thing
     cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
