@@ -13,6 +13,7 @@
 #include <opencv2/highgui/highgui_c.h>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "aboutdialog.h"
 #include "colorthresholddialog.h"
 #include "histogramdialog.h"
 #include "outlinedialog.h"
@@ -49,6 +50,7 @@ private slots:
     void showHistogramClicked();
     void showOutlineClicked();
     void showSquaresClicked();
+    void aboutDialogClicked();
 
     void save();
     void load();

@@ -41,6 +41,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionHistogram, SIGNAL(triggered()), this, SLOT(showHistogramClicked()));
     connect(ui->actionOutline, SIGNAL(triggered()), this, SLOT(showOutlineClicked()));
     connect(ui->actionSquares, SIGNAL(triggered()), this, SLOT(showSquaresClicked()));
+    connect(ui->actionAboutFred, SIGNAL(triggered()), this, SLOT(aboutDialogClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
 
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
@@ -369,4 +370,9 @@ void MainWindow::showSquaresClicked() {
     } else {
         squaresDialog->hide();
     }
+}
+
+void MainWindow::aboutDialogClicked() {
+    AboutDialog a(this);
+    a.exec();
 }

@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     colorthresholddialog.cpp \
     histogramdialog.cpp \
     outlinedialog.cpp \
-    squaredialog.cpp
+    squaredialog.cpp \
+    aboutdialog.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
     histogramdialog.h \
     outlinedialog.h \
-    squaredialog.h
+    squaredialog.h \
+    aboutdialog.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
