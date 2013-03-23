@@ -5,7 +5,7 @@ SquareDialog::SquareDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SquareDialog),
     threshold(50),
-    N(1)
+    N(11)
 {
     ui->setupUi(this);
 

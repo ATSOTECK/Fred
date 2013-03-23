@@ -55,12 +55,18 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionToolbar, SIGNAL(triggered()), this, SLOT(showToolbarClicked()));
     ui->actionToolbar->setChecked(true);
 
-    ui->thresholdDock->close();
+    ui->commandsDock->close();
     //ui->originalImage->close();
     ui->pauseButton->close();
 
     ui->originalImage->setScaledContents(true);
     ui->processedImage->setScaledContents(true);
+
+    setUpActions();
+    setUpCommandDock();
+    setUpCommands();
+
+    connect(ui->actionAboutQt, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
 
     rMin = gMin = bMin = 0;
     rMax = gMax = bMax = 255;
@@ -83,6 +89,55 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
+QTreeWidgetItem *MainWindow::addRoot(QString name) {
+    QTreeWidgetItem *itm = new QTreeWidgetItem(ui->commands);
+    itm->setText(0, name);
+
+    return itm;
+}
+
+void MainWindow::addChild(QTreeWidgetItem *parent, QString name, QIcon &icon) {
+    QTreeWidgetItem *itm = new QTreeWidgetItem();
+    itm->setText(0, name);
+    itm->setIcon(0, icon);
+    itm->setData(0, 32, QVariant(name));
+    parent->addChild(itm);
+}
+
+void MainWindow::addChild(QTreeWidgetItem *parent, QTreeWidgetItem *child) {
+    parent->addChild(child);
+}
+
+
+void MainWindow::setUpCommandDock() {
+
+}
+
+void MainWindow::setUpCommands() {
+    ui->commands->setColumnCount(1);
+    ui->commands->setHeaderLabel("Commands");
+
+    QTreeWidgetItem *root;
+    root = addRoot("Running Commands");
+    root->setExpanded(true);
+
+    QTreeWidgetItem *drawOriginalImageItem = new QTreeWidgetItem();
+    drawOriginalImageItem->setText(0, "Draw original image");
+    drawOriginalImageItem->setData(0, Qt::UserRole, ORIGINAL);
+
+    addChild(root, drawOriginalImageItem);
+
+    ui->commands->setContextMenuPolicy(Qt::CustomContextMenu);
+
+    connect(ui->commands, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(getContextMenu(QPoint)));
+}
+
+void MainWindow::setUpActions() {
+    mPauseSelectedCommandAction = new QAction(tr("&Pause..."), this);
+    mResumeSelectedCommandAction = new QAction(tr("&Resume..."), this);
+    mResumeSelectedCommandAction->setEnabled(false);
+}
+
 int MainWindow::getCamCount() {
     CvCapture *cap;
     int ncams = 0;
@@ -95,6 +150,20 @@ int MainWindow::getCamCount() {
 
     cvReleaseCapture(&cap);
     return (ncams - 1);
+}
+
+void MainWindow::getContextMenu(const QPoint &point) {
+    QTreeWidgetItem *itm = ui->commands->itemAt(point);
+    if (!itm)
+        return;
+
+    QMenu *menu = new QMenu(ui->commands);
+
+    if ((itm->data(0, Qt::UserRole).toInt()) == ORIGINAL) {
+        menu->addAction(mPauseSelectedCommandAction);
+        menu->addAction(mResumeSelectedCommandAction);
+        menu->exec(ui->commands->viewport()->mapToGlobal(point));
+    }
 }
 
 void MainWindow::save() {
@@ -156,15 +225,15 @@ void MainWindow::processFrameAndUpdateGUI() {
     //histogram
     //histogramDialog->updatHistogram(matOriginal);
 
-    //doOutline();
+    doOutline();
 
-    //squaresDialog->findSquares(matDetectedEdges, squares);
-    //squaresDialog->drawSquares(matOriginal, squares);
+    squaresDialog->findSquares(matOriginal, squares);
+    squaresDialog->drawSquares(matOriginal, squares);
 
     //0, 120, 0     170, 256, 40 for the green thing
     cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
     cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
-    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10 , 400);
+    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10, 400);
 
     for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
         ui->console->appendPlainText("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
@@ -180,7 +249,7 @@ void MainWindow::processFrameAndUpdateGUI() {
 
     QImage qimgOriginal((uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
     QImage qimgProcessed((uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8);
-    QImage qimgOutline((uchar*)matOutline.data, matOutline.cols, matOutline.rows, matOutline.step, QImage::Format_Indexed8);
+    //QImage qimgOutline((uchar*)matOutline.data, matOutline.cols, matOutline.rows, matOutline.step, QImage::Format_Indexed8);
     QImage qimgOutline2((uchar*)matDetectedEdges.data, matDetectedEdges.cols, matDetectedEdges.rows, matDetectedEdges.step, QImage::Format_Indexed8);
 
     outlineDialog->setLabelPixmap(qimgOutline2);

@@ -29,7 +29,8 @@ FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
     histogramdialog.ui \
     outlinedialog.ui \
-    squaredialog.ui
+    squaredialog.ui \
+    aboutdialog.ui
 
 RESOURCES += \
     res.qrc

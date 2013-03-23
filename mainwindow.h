@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QToolButton>
 #include <QFileDialog>
+#include <QTreeWidget>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -29,6 +30,10 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    enum Commands {
+        ORIGINAL = 1
+    };
+
     int getCamCount();
 
 public slots:
@@ -48,7 +53,17 @@ private slots:
     void save();
     void load();
 
+    void getContextMenu(const QPoint &point);
+
 private:
+    QTreeWidgetItem *addRoot(QString name);
+    void addChild(QTreeWidgetItem *parent, QString name, QIcon &icon);
+    void addChild(QTreeWidgetItem *parent, QTreeWidgetItem *child);
+
+    void setUpCommandDock();
+    void setUpCommands();
+    void setUpActions();
+
     void doOutline();
 
     Ui::MainWindow *ui;
@@ -79,6 +94,9 @@ private:
     int timerTime, ncams, kernelSize;
 
     std::vector<std::vector<cv::Point> > squares;
+
+    QAction *mPauseSelectedCommandAction;
+    QAction *mResumeSelectedCommandAction;
 };
 
 #endif // MAINWINDOW_H
