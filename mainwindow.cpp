@@ -8,7 +8,14 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->console->appendPlainText("Starting...");
+    mBlack = QColor("black");
+    mBlue = QColor("blue");
+    mRed = QColor("red");
+    mGreen = QColor("green");
+
+    ui->console->setTextColor(mBlue);
+    ui->console->append("Starting...");
+    ui->console->setTextColor(mBlack);
 
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
@@ -77,7 +84,9 @@ MainWindow::MainWindow(QWidget *parent) :
     camera.open(0);
 
     if (camera.isOpened() == false) {
-        ui->console->appendPlainText("Error: camera not accessed successfully.");
+        ui->console->setTextColor(mRed);
+        ui->console->append("Error: camera not accessed successfully.");
+        ui->console->setTextColor(mBlack);
         return;
     }
 
@@ -120,6 +129,7 @@ void MainWindow::setUpCommands() {
 
     QTreeWidgetItem *root;
     root = addRoot("Running Commands");
+    root->setData(0, Qt::UserRole, ROOT);
     root->setExpanded(true);
 
     QTreeWidgetItem *drawOriginalImageItem = new QTreeWidgetItem();
@@ -134,9 +144,15 @@ void MainWindow::setUpCommands() {
 }
 
 void MainWindow::setUpActions() {
-    mPauseSelectedCommandAction = new QAction(tr("&Pause..."), this);
-    mResumeSelectedCommandAction = new QAction(tr("&Resume..."), this);
+    mPauseAllCommandsAction = new QAction(tr("&Pause All Commands"), this);
+    mResumeAllCommandsAction = new QAction(tr("&Resume All Commands"), this);
+    mResumeAllCommandsAction->setEnabled(false);
+
+    mPauseSelectedCommandAction = new QAction(tr("&Pause Command"), this);
+    mResumeSelectedCommandAction = new QAction(tr("&Resume Command"), this);
     mResumeSelectedCommandAction->setEnabled(false);
+
+    mDeleteSelectedCommandAction = new QAction(tr("&Delete Command"), this);
 }
 
 int MainWindow::getCamCount() {
@@ -160,10 +176,21 @@ void MainWindow::getContextMenu(const QPoint &point) {
 
     QMenu *menu = new QMenu(ui->commands);
 
-    if ((itm->data(0, Qt::UserRole).toInt()) == ORIGINAL) {
+    switch (itm->data(0, Qt::UserRole).toInt()) {
+    case ROOT:
+        menu->addAction(mPauseAllCommandsAction);
+        menu->addAction(mResumeAllCommandsAction);
+        menu->exec(ui->commands->viewport()->mapToGlobal(point));
+        break;
+    case ORIGINAL:
         menu->addAction(mPauseSelectedCommandAction);
         menu->addAction(mResumeSelectedCommandAction);
+        menu->addSeparator();
+        menu->addAction(mDeleteSelectedCommandAction);
         menu->exec(ui->commands->viewport()->mapToGlobal(point));
+        break;
+    default:
+        break;
     }
 }
 
@@ -177,7 +204,9 @@ void MainWindow::save() {
     QFile file(dir);
 
     if (!file.open(QIODevice::WriteOnly)) {
-        ui->console->appendPlainText("Error opening file for save.");
+        ui->console->setTextColor(mRed);
+        ui->console->append("Error opening file for save.");
+        ui->console->setTextColor(mBlack);
         return;
     }
 
@@ -200,7 +229,9 @@ void MainWindow::load() {
     QFile file(dir);
 
     if (!file.open(QIODevice::ReadOnly)) {
-        ui->console->appendPlainText("Error opening file for reading.");
+        ui->console->setTextColor(mRed);
+        ui->console->append("Error opening file for reading.");
+        ui->console->setTextColor(mBlack);
         return;
     }
 
@@ -219,17 +250,19 @@ void MainWindow::processFrameAndUpdateGUI() {
     camera.read(matOriginal);
 
     if (matOriginal.empty()) {
-        ui->console->appendPlainText("Error: camera not working!");
+        ui->console->setTextColor(mRed);
+        ui->console->append("Error: camera not working!");
+        ui->console->setTextColor(mBlack);
         return;
     }
 
     //histogram
     //histogramDialog->updatHistogram(matOriginal);
 
-    doOutline();
+    //doOutline();
 
-    squaresDialog->findSquares(matOriginal, squares);
-    squaresDialog->drawSquares(matOriginal, squares);
+    //squaresDialog->findSquares(matOriginal, squares);
+    //squaresDialog->drawSquares(matOriginal, squares);
 
     //0, 120, 0     170, 256, 40 for the green thing
     cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
@@ -237,9 +270,12 @@ void MainWindow::processFrameAndUpdateGUI() {
     cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10, 400);
 
     for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
-        ui->console->appendPlainText("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
+        ui->console->setTextColor(mGreen);
+        ui->console->append("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
                 ", y =" + QString::number((*itrCircles)[1]).rightJustified(4, ' ') +
                 ", radius =" + QString::number((*itrCircles)[2], 'f', 3).rightJustified(7, ' '));
+
+        ui->console->setTextColor(mBlack);
 
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
@@ -284,7 +320,7 @@ void MainWindow::pauseButtonClicked() {
         ui->actionPause->setDisabled(true);
         ui->actionStart->setEnabled(true);
 
-        ui->console->appendPlainText("Pausing");
+        ui->console->append("Pausing");
     } else {
         timer->start(timerTime);
 
@@ -293,7 +329,7 @@ void MainWindow::pauseButtonClicked() {
         ui->actionPause->setDisabled(false);
         ui->actionStart->setEnabled(false);
 
-        ui->console->appendPlainText("Resuming");
+        ui->console->append("Resuming");
     }
 }
 

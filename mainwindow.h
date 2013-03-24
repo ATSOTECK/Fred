@@ -32,7 +32,8 @@ public:
     ~MainWindow();
 
     enum Commands {
-        ORIGINAL = 1
+        ROOT = 1,
+        ORIGINAL
     };
 
     int getCamCount();
@@ -97,8 +98,16 @@ private:
 
     std::vector<std::vector<cv::Point> > squares;
 
+    QAction *mPauseAllCommandsAction;
+    QAction *mResumeAllCommandsAction;
     QAction *mPauseSelectedCommandAction;
     QAction *mResumeSelectedCommandAction;
+    QAction *mDeleteSelectedCommandAction;
+
+    QColor mBlack;
+    QColor mBlue;
+    QColor mRed;
+    QColor mGreen;
 };
 
 #endif // MAINWINDOW_H
