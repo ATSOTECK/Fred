@@ -89,6 +89,9 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->console->setTextColor(mBlack);
         return;
     }
+    
+    Command<MainWindow> c("Find Circle", *this, &MainWindow::doCircles);
+    addCommand(c);
 
     timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
@@ -126,8 +129,7 @@ void MainWindow::setUpCommandDock() {
 void MainWindow::setUpCommands() {
     ui->commands->setColumnCount(1);
     ui->commands->setHeaderLabel("Commands");
-
-    QTreeWidgetItem *root;
+    
     root = addRoot("Running Commands");
     root->setData(0, Qt::UserRole, ROOT);
     root->setExpanded(true);
@@ -259,11 +261,52 @@ void MainWindow::processFrameAndUpdateGUI() {
     //histogram
     //histogramDialog->updatHistogram(matOriginal);
 
+    int size = mCommandList.size();
+    for (int i = 0; i < size; ++i) {
+        Command<MainWindow> c = mCommandList.at(i);
+        if (!c.isPaused() && !c.isRunning()) {
+            c.update();
+        }
+    }
+    
     //doOutline();
 
     //squaresDialog->findSquares(matOriginal, squares);
     //squaresDialog->drawSquares(matOriginal, squares);
 
+    //0, 120, 0     170, 256, 40 for the green thing
+    /*
+    cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
+    cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
+    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10, 400);
+
+    for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
+        ui->console->setTextColor(mGreen);
+        ui->console->append("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
+                ", y =" + QString::number((*itrCircles)[1]).rightJustified(4, ' ') +
+                ", radius =" + QString::number((*itrCircles)[2], 'f', 3).rightJustified(7, ' '));
+
+        ui->console->setTextColor(mBlack);
+
+        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
+        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
+    }
+    */
+    //convert and display
+    cv::cvtColor(matOriginal, matOriginal, CV_BGR2RGB);
+
+    QImage qimgOriginal((uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
+    QImage qimgProcessed((uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8);
+    //QImage qimgOutline((uchar*)matOutline.data, matOutline.cols, matOutline.rows, matOutline.step, QImage::Format_Indexed8);
+    QImage qimgOutline2((uchar*)matDetectedEdges.data, matDetectedEdges.cols, matDetectedEdges.rows, matDetectedEdges.step, QImage::Format_Indexed8);
+
+    outlineDialog->setLabelPixmap(qimgOutline2);
+
+    ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
+    ui->processedImage->setPixmap(QPixmap::fromImage(qimgProcessed));
+}
+
+void MainWindow::doCircles() {
     //0, 120, 0     170, 256, 40 for the green thing
     cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
     cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
@@ -280,19 +323,6 @@ void MainWindow::processFrameAndUpdateGUI() {
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
         cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
     }
-
-    //convert and display
-    cv::cvtColor(matOriginal, matOriginal, CV_BGR2RGB);
-
-    QImage qimgOriginal((uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
-    QImage qimgProcessed((uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8);
-    //QImage qimgOutline((uchar*)matOutline.data, matOutline.cols, matOutline.rows, matOutline.step, QImage::Format_Indexed8);
-    QImage qimgOutline2((uchar*)matDetectedEdges.data, matDetectedEdges.cols, matDetectedEdges.rows, matDetectedEdges.step, QImage::Format_Indexed8);
-
-    outlineDialog->setLabelPixmap(qimgOutline2);
-
-    ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
-    ui->processedImage->setPixmap(QPixmap::fromImage(qimgProcessed));
 }
 
 void MainWindow::doOutline() {
@@ -412,3 +442,42 @@ void MainWindow::aboutDialogClicked() {
     AboutDialog a(this);
     a.exec();
 }
+
+void MainWindow::newCommandClicked() {
+    
+}
+
+void MainWindow::addCommand(Command<MainWindow> c) {
+    Q_ASSERT(c);
+    
+    mCommandList.append(c);
+    
+    QTreeWidgetItem *itm = new QTreeWidgetItem();
+    itm->setText(0, c.getName());
+    itm->setData(0, Qt::UserRole, ORIGINAL);
+
+    addChild(root, itm);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

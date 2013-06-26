@@ -7,6 +7,7 @@
 #include <QToolButton>
 #include <QFileDialog>
 #include <QTreeWidget>
+#include <QList>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -15,6 +16,7 @@
 
 #include "aboutdialog.h"
 #include "colorthresholddialog.h"
+#include "command.h"
 #include "histogramdialog.h"
 #include "outlinedialog.h"
 #include "squaredialog.h"
@@ -52,6 +54,7 @@ private slots:
     void showOutlineClicked();
     void showSquaresClicked();
     void aboutDialogClicked();
+    void newCommandClicked();
 
     void save();
     void load();
@@ -67,6 +70,7 @@ private:
     void setUpCommands();
     void setUpActions();
 
+    void doCircles();
     void doOutline();
 
     Ui::MainWindow *ui;
@@ -97,6 +101,9 @@ private:
     int timerTime, ncams, kernelSize;
 
     std::vector<std::vector<cv::Point> > squares;
+    
+    void addCommand(Command<MainWindow> c);
+    QList<Command<MainWindow> > mCommandList;
 
     QAction *mPauseAllCommandsAction;
     QAction *mResumeAllCommandsAction;
@@ -108,6 +115,8 @@ private:
     QColor mBlue;
     QColor mRed;
     QColor mGreen;
+    
+    QTreeWidgetItem *root;
 };
 
 #endif // MAINWINDOW_H

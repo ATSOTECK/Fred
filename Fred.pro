@@ -18,14 +18,16 @@ SOURCES += main.cpp\
     histogramdialog.cpp \
     outlinedialog.cpp \
     squaredialog.cpp \
-    aboutdialog.cpp
+    aboutdialog.cpp \
+    command.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
     histogramdialog.h \
     outlinedialog.h \
     squaredialog.h \
-    aboutdialog.h
+    aboutdialog.h \
+    command.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
