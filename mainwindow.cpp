@@ -15,15 +15,21 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->console->setTextColor(mBlue);
     ui->console->append("Starting...");
+    QString version = CV_VERSION;
+    ui->console->append("OpenCV version " + version);
     ui->console->setTextColor(mBlack);
 
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
     ncams = this->getCamCount();
+    
+    ui->console->setTextColor(mBlue);
+    ui->console->append(QString::number(ncams) + " camera(s) detected.");
+    ui->console->setTextColor(mBlack);
 
     QMenu *devicesMenu = new QMenu();
-    for (int i = 0; i <= ncams; i++) {
+    for (int i = 0; i < ncams; ++i) {
         QAction *testAction = new QAction("Camera: " + QString::number(i), this);
         devicesMenu->addAction(testAction);
         ui->menuDevices->addAction(testAction);
@@ -63,7 +69,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionToolbar, SIGNAL(triggered()), this, SLOT(showToolbarClicked()));
     ui->actionToolbar->setChecked(true);
 
-    ui->commandsDock->close();
+    //ui->commandsDock->close();
     //ui->originalImage->close();
     ui->pauseButton->close();
 
@@ -310,7 +316,7 @@ void MainWindow::doCircles() {
     //0, 120, 0     170, 256, 40 for the green thing
     cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
     cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
-    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10, 400);
+    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 1, matProcessed.rows / 4, 100, 50, 10, 400);
 
     for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
         ui->console->setTextColor(mGreen);
