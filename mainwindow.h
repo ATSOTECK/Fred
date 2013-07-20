@@ -39,6 +39,11 @@ public:
     };
 
     int getCamCount();
+    
+    void debug(const QString &msg);
+    void warn(const QString &msg);
+    void crit(const QString &msg);
+    void fail(const QString &msg);
 
 public slots:
     void processFrameAndUpdateGUI();
@@ -118,5 +123,8 @@ private:
     
     QTreeWidgetItem *root;
 };
+
+void setMainWindow(MainWindow *mw);
+void catchMessage(QtMsgType type, const QMessageLogContext &, const QString &msg);
 
 #endif // MAINWINDOW_H

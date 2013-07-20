@@ -13,6 +13,7 @@ int main(int argc, char *argv[])
     a.processEvents();
     MainWindow w;
     w.showMaximized();
+    setMainWindow(&w);
     splash.finish(&w);
 
     return a.exec();

@@ -1,32 +1,61 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include <QtCore>
+
+#include <QDebug>
+
+
+MainWindow *w;
+
+void setMainWindow(MainWindow *mw) {
+    w = mw;
+}
+
+void catchMessage(QtMsgType type, const QMessageLogContext &, const QString &msg) {
+    switch (type) {
+    case QtDebugMsg:
+        w->debug(msg);
+        break;
+    case QtWarningMsg:
+        w->warn(msg);
+        break;
+    case QtCriticalMsg:
+        w->crit(msg);
+        break;
+    case QtFatalMsg:
+        w->fail(msg);
+        break;
+    default:
+        break;
+    }
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     kernelSize(3)
 {
     ui->setupUi(this);
+    
+    qInstallMessageHandler(catchMessage);
 
     mBlack = QColor("black");
     mBlue = QColor("blue");
     mRed = QColor("red");
     mGreen = QColor("green");
-
-    ui->console->setTextColor(mBlue);
-    ui->console->append("Starting...");
+    
+    ui->console->setReadOnly(true);
+    
+    debug("Starting...");
     QString version = CV_VERSION;
-    ui->console->append("OpenCV version " + version);
-    ui->console->setTextColor(mBlack);
+    debug("OpenCV version " + version);
 
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
     ncams = this->getCamCount();
-    
-    ui->console->setTextColor(mBlue);
-    ui->console->append(QString::number(ncams) + " camera(s) detected.");
-    ui->console->setTextColor(mBlack);
+    debug(QString::number(ncams) + " camera(s) detected.");
 
     QMenu *devicesMenu = new QMenu();
     for (int i = 0; i < ncams; ++i) {
@@ -106,6 +135,30 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow() {
     delete ui;
+}
+
+void MainWindow::debug(const QString &msg) {
+    QColor c(98, 217, 239);
+    ui->console->setTextColor(c);
+    ui->console->append(msg);
+    ui->console->setTextColor(Qt::white);
+}
+void MainWindow::warn(const QString &msg) {
+    ui->console->setTextColor(QColor(230, 219, 116));
+    ui->console->append(msg);
+    ui->console->setTextColor(Qt::white);
+}
+
+void MainWindow::crit(const QString &msg) {
+    ui->console->setTextColor(Qt::red);
+    ui->console->append(msg);
+    ui->console->setTextColor(Qt::white);
+}
+
+void MainWindow::fail(const QString &msg) {
+    ui->console->setTextColor(Qt::red);
+    ui->console->append(msg);
+    ui->console->setTextColor(Qt::white);
 }
 
 QTreeWidgetItem *MainWindow::addRoot(QString name) {
@@ -351,7 +404,7 @@ void MainWindow::pauseButtonClicked() {
     if (!ui->actionStart->isEnabled()) {
         timer->stop();
 
-        ui->pauseButton->setText("Resume");
+        debug("Resume");
 
         ui->actionPause->setDisabled(true);
         ui->actionStart->setEnabled(true);
@@ -365,7 +418,7 @@ void MainWindow::pauseButtonClicked() {
         ui->actionPause->setDisabled(false);
         ui->actionStart->setEnabled(false);
 
-        ui->console->append("Resuming");
+        debug("Resuming");
     }
 }
 
@@ -409,7 +462,7 @@ void MainWindow::hideThreshold() {
 }
 
 void MainWindow::clearConsoleClicked() {
-    ui->console->setPlainText("Clear console");
+    debug("Clear console");
 }
 
 void MainWindow::showToolbarClicked() {
