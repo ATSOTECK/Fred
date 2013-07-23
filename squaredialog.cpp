@@ -40,7 +40,7 @@ void SquareDialog::findSquares(const cv::Mat &img, std::vector<std::vector<cv::P
 
     //find squares in every color plane of the image
     for (int c = 0; c < 3; c++) {
-        int ch[] = {c, 0};
+        //int ch[] = {c, 0};
         //cv::mixChannels(&timg, 1, &gray0, 1, ch, 1);
 
         //try several threshold levels

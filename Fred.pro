@@ -25,7 +25,10 @@ SOURCES += main.cpp\
     outlinedialog.cpp \
     squaredialog.cpp \
     aboutdialog.cpp \
-    command.cpp
+    command.cpp \
+    codeEditor/codeEditor.cpp \
+    codeEditor/highlighter.cpp \
+    codeEditor/miniMapC.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
@@ -33,7 +36,10 @@ HEADERS  += mainwindow.h \
     outlinedialog.h \
     squaredialog.h \
     aboutdialog.h \
-    command.h
+    command.h \
+    codeEditor/codeEditor.h \
+    codeEditor/highlighter.h \
+    codeEditor/miniMapC.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \

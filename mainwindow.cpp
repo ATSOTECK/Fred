@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "codeEditor/codeEditor.h"
+
 #include <QtCore>
 
 #include <QDebug>
@@ -34,11 +36,14 @@ void catchMessage(QtMsgType type, const QMessageLogContext &, const QString &msg
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    kernelSize(3)
+    kernelSize(3),
+    mStatusLabel(new QLabel)
 {
     ui->setupUi(this);
     
     qInstallMessageHandler(catchMessage);
+    
+    setCentralWidget(ui->tabs);
 
     mBlack = QColor("black");
     mBlue = QColor("blue");
@@ -74,8 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
     devicesButton->setPopupMode(QToolButton::InstantPopup);
     devicesButton->setToolTip("Available devices");
     ui->mainToolBar->addWidget(devicesButton);
-
-    connect(ui->pauseButton, SIGNAL(clicked()), this, SLOT(pauseButtonClicked()));
+    
     connect(ui->actionPause, SIGNAL(triggered()), this, SLOT(pauseButtonClicked()));
     connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(pauseButtonClicked()));
 
@@ -100,7 +104,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //ui->commandsDock->close();
     //ui->originalImage->close();
-    ui->pauseButton->close();
 
     ui->originalImage->setScaledContents(true);
     ui->processedImage->setScaledContents(true);
@@ -113,6 +116,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     rMin = gMin = bMin = 0;
     rMax = gMax = bMax = 255;
+    
+    mMainCodeEditor = addCodeEditor();
+    connect(mMainCodeEditor, SIGNAL(statusInfoChanged(QString)), this, SLOT(updateStatusLabel(QString)));
+    
+    ui->tabs->addTab(mMainCodeEditor, "main.lua");
+    
+    mStatusLabel->setText("");
+    ui->statusBar->addWidget(mStatusLabel);
 
     timerTime = 16;
 
@@ -180,7 +191,6 @@ void MainWindow::addChild(QTreeWidgetItem *parent, QTreeWidgetItem *child) {
     parent->addChild(child);
 }
 
-
 void MainWindow::setUpCommandDock() {
 
 }
@@ -214,6 +224,13 @@ void MainWindow::setUpActions() {
     mResumeSelectedCommandAction->setEnabled(false);
 
     mDeleteSelectedCommandAction = new QAction(tr("&Delete Command"), this);
+    
+    mHideConsoleAction = new QAction(tr("&Hide Console"), this);
+    mHideConsoleAction->setShortcut(QKeySequence("Escape"));
+    
+    ui->menuView->addAction(mHideConsoleAction);
+    
+    connect(mHideConsoleAction, SIGNAL(triggered()), this, SLOT(hideConsole()));
 }
 
 int MainWindow::getCamCount() {
@@ -253,6 +270,39 @@ void MainWindow::getContextMenu(const QPoint &point) {
     default:
         break;
     }
+}
+
+CodeEditor *MainWindow::addCodeEditor() {
+    Highlighter *highlighter = 0;
+    QCompleter *completer;
+    CodeEditor *codeEditor = new CodeEditor("main", 0, highlighter);
+    codeEditor->setUndoRedoEnabled(true);
+    codeEditor->setTabStopWidth(32);
+#ifdef Q_OS_MAC
+    int size = 12;
+    QFont font("Monaco", size);
+#endif
+#ifdef Q_OS_WIN
+    int size = 10;
+    QFont font("Consolas", size);
+#endif
+#ifdef Q_OS_LINUX
+    int size = 10;
+    QFont font("Inconsolata-g", size);
+#endif
+    codeEditor->setFont(font);
+    codeEditor->appendPlainText("--main.lua\n");
+    codeEditor->appendPlainText("function update()\n    if not paused() then\n        showOriginalImage()\n    end\nend");
+    highlighter = new Highlighter(codeEditor->document());
+    completer = new QCompleter();
+    //completer->setModel(dm->modelFromFile(":/wordlist.txt"));
+    completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
+    completer->setCaseSensitivity(Qt::CaseInsensitive);
+    completer->setWrapAround(false);
+    completer->popup()->setStyleSheet("color: #848484; background-color: #2E2E2E; selection-background-color: #424242;");
+    codeEditor->setCompleter(completer);
+
+    return codeEditor;
 }
 
 void MainWindow::save() {
@@ -400,25 +450,26 @@ void MainWindow::doOutline() {
     matDetectedEdges.copyTo(matOutline, matDetectedEdges);
 }
 
+void MainWindow::updateStatusLabel(const QString &text) {
+    mStatusLabel->setText(text);
+}
+
 void MainWindow::pauseButtonClicked() {
     if (!ui->actionStart->isEnabled()) {
         timer->stop();
 
-        debug("Resume");
-
         ui->actionPause->setDisabled(true);
         ui->actionStart->setEnabled(true);
 
-        ui->console->append("Pausing");
+        debug("Pausing");
     } else {
         timer->start(timerTime);
-
-        ui->pauseButton->setText("Pause");
 
         ui->actionPause->setDisabled(false);
         ui->actionStart->setEnabled(false);
 
         debug("Resuming");
+        ui->tabs->setCurrentIndex(0);
     }
 }
 
@@ -463,6 +514,11 @@ void MainWindow::hideThreshold() {
 
 void MainWindow::clearConsoleClicked() {
     debug("Clear console");
+}
+
+void MainWindow::hideConsole() {
+    ui->consoleDock->setHidden(!ui->consoleDock->isHidden());
+    ui->commandsDock->setHidden(!ui->commandsDock->isHidden());
 }
 
 void MainWindow::showToolbarClicked() {

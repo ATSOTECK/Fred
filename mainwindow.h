@@ -8,6 +8,7 @@
 #include <QFileDialog>
 #include <QTreeWidget>
 #include <QList>
+#include <QLabel>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -24,6 +25,8 @@
 namespace Ui {
 class MainWindow;
 }
+
+class CodeEditor;
 
 class MainWindow : public QMainWindow
 {
@@ -49,6 +52,10 @@ public slots:
     void processFrameAndUpdateGUI();
     void updateThreshold();
     
+    CodeEditor *addCodeEditor();
+    
+    void updateStatusLabel(const QString &text);
+    
 private slots:
     void pauseButtonClicked();
     void thresholdClicked();
@@ -65,6 +72,8 @@ private slots:
     void load();
 
     void getContextMenu(const QPoint &point);
+    
+    void hideConsole();
 
 private:
     QTreeWidgetItem *addRoot(QString name);
@@ -115,6 +124,8 @@ private:
     QAction *mPauseSelectedCommandAction;
     QAction *mResumeSelectedCommandAction;
     QAction *mDeleteSelectedCommandAction;
+    
+    QAction *mHideConsoleAction;
 
     QColor mBlack;
     QColor mBlue;
@@ -122,6 +133,9 @@ private:
     QColor mGreen;
     
     QTreeWidgetItem *root;
+    CodeEditor *mMainCodeEditor;
+    
+    QLabel *mStatusLabel;
 };
 
 void setMainWindow(MainWindow *mw);
