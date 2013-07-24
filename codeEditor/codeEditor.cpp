@@ -29,7 +29,7 @@ CodeEditor::CodeEditor(QString name, QWidget *parent, Highlighter *h):
     
     //Preferences *prefs = Preferences::instance();
     
-    bool b = true;//prefs->showCodeEditorMiniMap();
+    bool b = true; //prefs->showCodeEditorMiniMap();
     
     if (b) {
         Highlighter *miniHighlighter = 0;
@@ -423,6 +423,18 @@ QString CodeEditor::textUnderCursor() const {
     return tc.selectedText();
 }
 
+QString CodeEditor::textLeftOfCursor() const {
+    QTextCursor tc = textCursor();
+    tc.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor);
+    return tc.selectedText();
+}
+
+QString CodeEditor::textRightOfCursor() const {
+    QTextCursor tc = textCursor();
+    tc.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor);
+    return tc.selectedText();
+}
+
 void CodeEditor::focusInEvent(QFocusEvent *e) {
     if (c)
         c->setWidget(this);
@@ -462,6 +474,11 @@ void CodeEditor::keyPressEvent(QKeyEvent *e) {
         break;
     case Qt::Key_Tab:
         insertIndentation();
+        return;
+        break;
+    case Qt::Key_Enter:
+    case Qt::Key_Return:
+        autoCompleteEnter();
         return;
         break;
     default:
@@ -578,6 +595,116 @@ void CodeEditor::indentMore() {
         block= block.next();
     }
     cursor.endEditBlock();
+}
+
+void CodeEditor::autoCompleteEnter() {
+    bool autoIndent = false, addEnd = false, 
+            addClosingCurlyBrace = false, 
+            addClosingParen = false, 
+            addClosingBracket = false,
+            ch = false;
+    QString str = textCursor().block().text();
+    QString spaces = getIndentation(str);
+    
+    if (textCursor().atBlockEnd()) {
+        if (str.contains("function") && str.endsWith(')')) {
+            autoIndent = true;
+            addEnd = true;
+        } if (str.contains("if") && str.contains("then") && str.endsWith('n')) {
+            addEnd = true;
+        } if (str.contains("else") && str.endsWith('e')) {
+            addEnd = true;
+        } if (str.contains("do") && str.endsWith('o')) {
+            addEnd = true;
+        } else if (str.endsWith('{')) {
+            autoIndent = true;
+            addClosingCurlyBrace = true;
+        } else if (str.endsWith('(')) {
+            autoIndent = true;
+            addClosingParen = true;
+        } else if (str.endsWith('[')) {
+            autoIndent = true;
+            addClosingBracket = true;
+        }
+    }
+    
+    if (str.contains("{}") && str.endsWith("}") && textLeftOfCursor() == "{") {
+        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(spaces);
+        moveCursor(QTextCursor::Up);
+        autoIndent = true;
+        ch = true;
+    }
+    
+    if (str.contains("()") && str.endsWith(")") && textLeftOfCursor() == "(") {
+        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(spaces);
+        moveCursor(QTextCursor::Up);
+        autoIndent = true;
+        ch = true;
+    }
+    
+    if (str.contains("[]") && str.endsWith("]") && textLeftOfCursor() == "[") {
+        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(spaces);
+        moveCursor(QTextCursor::Up);
+        autoIndent = true;
+        ch = true;
+    }
+    
+    textCursor().insertText("\n");
+    
+    if (autoIndent) {
+        insertIndentation();
+    }
+    
+    if (addEnd) {
+        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(spaces + "end");
+        moveCursor(QTextCursor::Up);
+    }
+    
+    if (addClosingCurlyBrace) {
+        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(spaces + "}");
+        moveCursor(QTextCursor::Up);
+    }
+    
+    if (addClosingParen) {
+        textCursor().insertText("\n");
+        textCursor().insertText(spaces + ")");
+        moveCursor(QTextCursor::Up);
+    }
+    
+    if (addClosingBracket) {
+        textCursor().insertText("\n");
+        textCursor().insertText(spaces + "]");
+        moveCursor(QTextCursor::Up);
+    }
+    
+    if (spaces.length() > 1 && !autoIndent) {
+        textCursor().insertText(spaces);
+    }
+    
+    if (ch) {
+        for (int i = 0; i < 4; ++ i) {
+            moveCursor(QTextCursor::NextCharacter);
+        }
+    }
+}
+
+QString CodeEditor::getIndentation(const QString &text) {
+    QString indentation = "";
+    for (int i = 0; i < text.length(); ++i) {
+        QChar ch = text.at(i);
+        if (ch == ' ') {
+            indentation += " ";
+        } else {
+            break;
+        }
+    }
+    
+    return indentation;
 }
 
 QString CodeEditor::reverseSelectTextPortionFromOffset(int begin, int end) {

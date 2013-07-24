@@ -292,7 +292,7 @@ CodeEditor *MainWindow::addCodeEditor() {
 #endif
     codeEditor->setFont(font);
     codeEditor->appendPlainText("--main.lua\n");
-    codeEditor->appendPlainText("function update()\n    if not paused() then\n        showOriginalImage()\n    end\nend");
+    codeEditor->appendPlainText("function update()\n    if not paused() then\n        showOriginalImage(0)\n    end\nend");
     highlighter = new Highlighter(codeEditor->document());
     completer = new QCompleter();
     //completer->setModel(dm->modelFromFile(":/wordlist.txt"));
@@ -368,7 +368,7 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
 
     //histogram
-    //histogramDialog->updatHistogram(matOriginal);
+    histogramDialog->updatHistogram(matOriginal);
 
     int size = mCommandList.size();
     for (int i = 0; i < size; ++i) {

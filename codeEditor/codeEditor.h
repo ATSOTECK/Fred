@@ -80,12 +80,13 @@ signals:
     void statusInfoChanged(QString info);
 
 private:
-    //void insertIndentation();
-    
     void completeBraces(QString text);
     void completeQuotes(QString text);
     void insertIndentation();
     void indentMore();
+    void autoCompleteEnter();
+    
+    QString getIndentation(const QString &text);
     
     QString reverseSelectTextPortionFromOffset(int begin, int end);
     
@@ -94,6 +95,8 @@ private:
     QWidget *lineNumberArea;
 
     QString textUnderCursor() const;
+    QString textLeftOfCursor() const;
+    QString textRightOfCursor() const;
 
     QCompleter *c;
 
