@@ -321,6 +321,10 @@ QPlainTextEdit {
 background: /*#272822*/#1C1C1C;
 }
 
+QTextBrowser {
+background: /*#272822*/#1C1C1C;
+}
+
 QTextEdit {
 background: #292925;
 }
@@ -502,6 +506,11 @@ stop: 0 #888dd9, stop: 1 #6a6ea9);
 }
 
 QPlainTextEdit {
+selection-color: #FFFFFF; 
+selection-background-color: #437DCD;
+}
+
+QTextBrowser {
 selection-color: #FFFFFF; 
 selection-background-color: #437DCD;
 }</string>
