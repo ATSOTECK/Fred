@@ -4,6 +4,7 @@
 #include "codeEditor/codeEditor.h"
 
 #include <QtCore>
+#include <QStringListModel>
 
 #include <QDebug>
 
@@ -295,7 +296,7 @@ CodeEditor *MainWindow::addCodeEditor() {
     codeEditor->appendPlainText("function update()\n    if not paused() then\n        showOriginalImage(0)\n    end\nend");
     highlighter = new Highlighter(codeEditor->document());
     completer = new QCompleter();
-    //completer->setModel(dm->modelFromFile(":/wordlist.txt"));
+    completer->setModel(modelFromFile(completer, ":/wordlist.txt"));
     completer->setModelSorting(QCompleter::CaseInsensitivelySortedModel);
     completer->setCaseSensitivity(Qt::CaseInsensitive);
     completer->setWrapAround(false);
@@ -303,6 +304,29 @@ CodeEditor *MainWindow::addCodeEditor() {
     codeEditor->setCompleter(completer);
 
     return codeEditor;
+}
+
+QAbstractItemModel *MainWindow::modelFromFile(QCompleter *c, const QString &fileName) {
+    QFile file(fileName);
+    if (!file.open(QFile::ReadOnly))
+        return new QStringListModel(c);
+
+#ifndef QT_NO_CURSOR
+    //QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+#endif
+    QStringList words;
+
+    while (!file.atEnd()) {
+        QByteArray line = file.readLine();
+        if (!line.isEmpty()) {
+            words << line.trimmed();
+        }
+    }
+
+#ifndef QT_NO_CURSOR
+    //QApplication::restoreOverrideCursor();
+#endif
+    return new QStringListModel(words, c);
 }
 
 void MainWindow::save() {

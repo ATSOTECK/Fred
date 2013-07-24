@@ -431,7 +431,7 @@ QString CodeEditor::textLeftOfCursor() const {
 
 QString CodeEditor::textRightOfCursor() const {
     QTextCursor tc = textCursor();
-    tc.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor);
+    tc.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
     return tc.selectedText();
 }
 
@@ -605,10 +605,10 @@ void CodeEditor::autoCompleteEnter() {
             ch = false;
     QString str = textCursor().block().text();
     QString spaces = getIndentation(str);
+    QString tab = "    ";
     
     if (textCursor().atBlockEnd()) {
         if (str.contains("function") && str.endsWith(')')) {
-            autoIndent = true;
             addEnd = true;
         } if (str.contains("if") && str.contains("then") && str.endsWith('n')) {
             addEnd = true;
@@ -617,38 +617,32 @@ void CodeEditor::autoCompleteEnter() {
         } if (str.contains("do") && str.endsWith('o')) {
             addEnd = true;
         } else if (str.endsWith('{')) {
-            autoIndent = true;
             addClosingCurlyBrace = true;
         } else if (str.endsWith('(')) {
-            autoIndent = true;
             addClosingParen = true;
         } else if (str.endsWith('[')) {
-            autoIndent = true;
             addClosingBracket = true;
         }
     }
     
     if (str.contains("{}") && str.endsWith("}") && textLeftOfCursor() == "{") {
-        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces);
         moveCursor(QTextCursor::Up);
-        autoIndent = true;
         ch = true;
     }
     
     if (str.contains("()") && str.endsWith(")") && textLeftOfCursor() == "(") {
-        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces);
         moveCursor(QTextCursor::Up);
-        autoIndent = true;
         ch = true;
     }
     
     if (str.contains("[]") && str.endsWith("]") && textLeftOfCursor() == "[") {
-        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces);
         moveCursor(QTextCursor::Up);
-        autoIndent = true;
         ch = true;
     }
     
@@ -659,25 +653,25 @@ void CodeEditor::autoCompleteEnter() {
     }
     
     if (addEnd) {
-        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces + "end");
         moveCursor(QTextCursor::Up);
     }
     
     if (addClosingCurlyBrace) {
-        textCursor().insertText(spaces + "\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces + "}");
         moveCursor(QTextCursor::Up);
     }
     
     if (addClosingParen) {
-        textCursor().insertText("\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces + ")");
         moveCursor(QTextCursor::Up);
     }
     
     if (addClosingBracket) {
-        textCursor().insertText("\n");
+        textCursor().insertText(tab + "\n");
         textCursor().insertText(spaces + "]");
         moveCursor(QTextCursor::Up);
     }
@@ -703,6 +697,8 @@ QString CodeEditor::getIndentation(const QString &text) {
             break;
         }
     }
+    
+    //qDebug().nospace() << "i" << indentation << indentation.length();
     
     return indentation;
 }

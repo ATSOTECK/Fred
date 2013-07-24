@@ -9,6 +9,7 @@
 #include <QTreeWidget>
 #include <QList>
 #include <QLabel>
+#include <QCompleter>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -53,6 +54,8 @@ public slots:
     void updateThreshold();
     
     CodeEditor *addCodeEditor();
+    
+    QAbstractItemModel *modelFromFile(QCompleter *c, const QString &fileName);
     
     void updateStatusLabel(const QString &text);
     
