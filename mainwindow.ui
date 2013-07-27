@@ -540,6 +540,12 @@ selection-background-color: #437DCD;
     <property name="currentIndex">
      <number>0</number>
     </property>
+    <property name="documentMode">
+     <bool>false</bool>
+    </property>
+    <property name="movable">
+     <bool>false</bool>
+    </property>
     <widget class="QWidget" name="tabImages">
      <attribute name="title">
       <string>Images</string>

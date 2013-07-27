@@ -1,23 +1,26 @@
 #include "miniMapC.h"
+#include "codeEditor.h"
 
 #include <QScrollBar>
 
-MiniMapC::MiniMapC(QPlainTextEdit *parent, Highlighter *h):
+MiniMapC::MiniMapC(QPlainTextEdit *parent, Highlighter *h, CodeEditor *c):
     QPlainTextEdit(parent)
 {
     setWordWrapMode(QTextOption::NoWrap);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     setReadOnly(true);
-    setCenterOnScroll(true);
+    //setCenterOnScroll(true);
     setMouseTracking(true);
     viewport()->setCursor(Qt::PointingHandCursor);
     setTextInteractionFlags(Qt::NoTextInteraction);
+    //grabKeyboard();
 
     mParent = parent;
     mLinesCount = 0;
     setSliderAreaLinesCount();
     mHighlighter = h;
+    mCodeEditor = c;
 
 #ifdef Q_OS_MAC
     mac = true;
@@ -36,6 +39,7 @@ MiniMapC::MiniMapC(QPlainTextEdit *parent, Highlighter *h):
     }
 
     setFrameStyle(0);
+    setTabStopWidth(2);
 
     mSlider = new SliderArea(this, this);
     mSlider->show();
@@ -57,7 +61,7 @@ void MiniMapC::calculateMax() {
 
 void MiniMapC::updateVisibleArea() {
     if (!mSlider->isPressed()) {
-        int lineNumber = this->firstVisibleBlock().blockNumber();
+        int lineNumber = mCodeEditor->editorFirstVisibleBlockNumber();
         QTextBlock block = document()->findBlockByLineNumber(lineNumber);
         mCursor = textCursor();
         mCursor.setPosition(block.position());
@@ -83,7 +87,8 @@ void MiniMapC::adjustToParent() {
         fontSize = 1;
     QFont font = document()->defaultFont();
     font.setPointSize(fontSize);
-    setFont(font);
+    font.setStyleStrategy(QFont::PreferAntialias);
+    this->setFont(font);
     calculateMax();
 }
 
@@ -131,16 +136,31 @@ void MiniMapC::scrollArea(QPointF parentPos, QPointF sliderPos) {
 }
 
 void MiniMapC::wheelEvent(QWheelEvent *e) {
+    /*
     int degrees = e->delta() / 8;
     int steps = degrees / 4;
     if (e->orientation() == Qt::Vertical) {
         verticalScrollBar()->setValue(verticalScrollBar()->value() - steps);
         mParent->verticalScrollBar()->setValue(mParent->verticalScrollBar()->value() - steps);
     }
+    */
+    mCodeEditor->lineNumberAreaWheelEvent(e);
 }
 
 void MiniMapC::setSliderAreaLinesCount() {
     mSlider->setLinesCount(mLinesCount);
+}
+
+void MiniMapC::keyEvent(QKeyEvent *e) {
+    keyPressEvent(e);
+}
+
+void MiniMapC::keyPressEvent(QKeyEvent *e) {
+    QPlainTextEdit::keyPressEvent(e);
+}
+
+void MiniMapC::sliderAreaWheelEvent(QWheelEvent *e) {
+    wheelEvent(e);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +246,10 @@ void SliderArea::mouseMoveEvent(QMouseEvent *event) {
 
 void SliderArea::setLinesCount(int /*lines*/) {
     //mCountLines = lines;
+}
+
+void SliderArea::wheelEvent(QWheelEvent *e) {
+    mMini->sliderAreaWheelEvent(e);
 }
 
 

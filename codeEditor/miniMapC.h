@@ -14,9 +14,10 @@
 #include <QPropertyAnimation>
 #include <QTextBlock>
 #include <QTextCursor>
+#include <QTextDocument>
 
 class Highlighter;
-
+class CodeEditor;
 class MiniMapC;
 
 class SliderArea : public QFrame {
@@ -32,6 +33,7 @@ public:
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
+    void wheelEvent(QWheelEvent *e);
 
     void moveSlider(float y);
 
@@ -56,7 +58,7 @@ private:
 
 class MiniMapC : public QPlainTextEdit {
 public:
-    MiniMapC(QPlainTextEdit *parent = 0, Highlighter *h = 0);
+    MiniMapC(QPlainTextEdit *parent = 0, Highlighter *h = 0, CodeEditor *c = 0);
     ~MiniMapC();
 
     void calculateMax();
@@ -66,6 +68,8 @@ public:
     void leaveEvent(QEvent *event);
     void mousePressEvent(QMouseEvent *e);
     void resizeEvent(QResizeEvent *e);
+    
+    void sliderAreaWheelEvent(QWheelEvent *e);
 
     void setCode(const QString &source);
 
@@ -76,10 +80,15 @@ public:
     void updateVisibleArea();
 
     void setSliderAreaLinesCount();
+    
+    void keyEvent(QKeyEvent *e); 
 
 private:
+    void keyPressEvent(QKeyEvent *e);
+    
     int mLinesCount;
     QPlainTextEdit *mParent;
+    CodeEditor *mCodeEditor;
     QGraphicsOpacityEffect *mGoe;
     QPropertyAnimation *mAnimation;
     SliderArea *mSlider;

@@ -13,11 +13,13 @@ Highlighter::Highlighter(QTextDocument *parent) :
     //keywordFormat.setFontWeight(QFont::setItalic(true));
     QStringList keywordPatterns;
     keywordPatterns << "\\band\\b" << "\\bbreak\\b" << "\\bdo\\b" << "\\belse\\b" << "\\belseif\\b"
-                    << "\\bend\\b" << "\\bfalse\\b" << "\\bfor\\b" << "\\bfunction\\b" << "\\bif\\b"
-                    << "\\bin\\b" << "\\blocal\\b" << "\\bnil\\b" << "\\bnot\\b" << "\\bor\\b"
-                    << "\\brepeat\\b" << "\\breturn\\b" << "\\bthen\\b" << "\\btrue\\b" << "\\buntil\\b"
+                    << "\\bend\\b" << "\\bfor\\b" << "\\bfunction\\b" << "\\bif\\b"
+                    << "\\bin\\b" << "\\blocal\\b" << "\\bnot\\b" << "\\bor\\b"
+                    << "\\brepeat\\b" << "\\breturn\\b" << "\\bthen\\b" << "\\buntil\\b"
                     << "\\bwhile\\b" << "\\b=\\b" << "\\b\\+\\b" << "\\b/\\b" << "\\b-\\b" << "\\b\\*\\b"
-                    << "\\B=\\B" << "\\B\\+\\B" << "\\B/\\B" << "\\B-\\B" << "\\B\\*\\B" << "\\b\\.\\.\\b" << "\\B\\.\\.\\B";
+                    << "\\B=\\B" << "\\B\\+\\B" << "\\B/\\B" << "\\B-\\B" << "\\B\\*\\B" << "\\b\\.\\.\\b" << "\\B\\.\\.\\B"
+                    << "\\b<=\\b"<< "\\B<=\\B" << "\\b>=\\b"<< "\\B>=\\B" << "\\b<\\b"<< "\\B<\\B" << "\\b>\\b"<< "\\B>\\B"
+                    << "\\#";
     foreach (const QString &pattern, keywordPatterns) {
         rule.pattern = QRegExp(pattern);
         rule.format = keywordFormat;
@@ -34,7 +36,7 @@ Highlighter::Highlighter(QTextDocument *parent) :
     QStringList classPatterns;
     classPatterns << "\\baurora\\b" << "\\bgraphics\\b" << "\\bother\\b" << "\\bglobal\\b" << "\\bself\\b" << "\\bio\\b" << "\\bmath\\b"
                   << "\\btable\\b" << "\\brequire\\b" << "\\bclass\\b" << "\\bsetmetatable\\b" << "\\bgetmetatable\\b"
-                  << "\\b\\.\\.\\.\\b" << "\\B\\.\\.\\.\\B" << "\\b\\\\n\\b";
+                  << "\\b\\.\\.\\.\\b" << "\\B\\.\\.\\.\\B" << "\\bstring\\b" << "\\berror\\b" << "\\bos\\b";
     //rule.pattern = QRegExp("\\bQ[A-Za-z]+\\b");
     foreach (const QString &pattern, classPatterns) {
         rule.pattern = QRegExp(pattern);
@@ -43,9 +45,13 @@ Highlighter::Highlighter(QTextDocument *parent) :
     }
 
     numberFormat.setForeground(QColor(174, 129, 255));
-    rule.pattern = QRegExp("\\d");
-    rule.format = numberFormat;
-    highlightingRules.append(rule);
+    QStringList numberPatterns;
+    numberPatterns << "\\b[0-9]+\\b" << "\\bnil\\b" << "\\btrue\\b" << "\\bfalse\\b";
+    foreach (const QString &pattern, numberPatterns) {
+        rule.pattern = QRegExp(pattern);
+        rule.format = numberFormat;
+        highlightingRules.append(rule);
+    }
     
     quotationFormat.setForeground(QColor(230, 219, 116));
     rule.pattern = QRegExp("\"[^\"]*(\\.[^\"]*)*\"");
@@ -57,9 +63,9 @@ Highlighter::Highlighter(QTextDocument *parent) :
     rule.format = singleQuotationFormat;
     highlightingRules.append(rule);
     
-    escapeFormat.setForeground(QColor(0x2E, 0xCC, 0xFA));
+    escapeFormat.setForeground(QColor(174, 129, 255));
     QStringList escapePatterns;
-    escapePatterns << "\\b\\\\n\\b" /*<< "\\B\\\\n\\B"*/;
+    escapePatterns << "^\\\\n";
     foreach (const QString &pattern, escapePatterns) {
         rule.pattern = QRegExp(pattern);
         rule.format = escapeFormat;
@@ -138,7 +144,7 @@ void Highlighter::rehighlightLines(int line) {
     rehighlightBlock(block);
 }
 
-void Highlighter::_rehighlightLines(QList<int> &/*lines*/) {
+void Highlighter::_rehighlightLines(QList<int> &lines) {
     
 }
 

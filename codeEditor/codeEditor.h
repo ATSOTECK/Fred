@@ -40,24 +40,35 @@ public:
     int foldArea;
     QVector<int> breakPoints;
     QVector<int> bookmarks;
+    QList<int> mFoldedLines;
     QList<QTextBlock> *mBookmarks;
 
     //protected in QPlainTextEdit
     QTextBlock editorFirstVisibleBlock();
+    int editorFirstVisibleBlockNumber();
     QPointF editorContentOffset();
     QRectF editorBlockBoundingGeometry(const QTextBlock &block) const;
 
     QString getName() const {
         return mName;
     }
+    
+    bool isModified() {
+        return true;
+    }
 
     bool saveToFile(QString &path);
     bool openFile(const QString &path);
+    
+    void lineNumberAreaMousePressEvent(QMouseEvent *e);
+    void lineNumberAreaMouseMoveEvent(QMouseEvent *e);
+    void lineNumberAreaWheelEvent(QWheelEvent *e);
 
 public slots:
     void findText();
     void updateMiniMapText();
     void updateMiniMapVisibleArea();
+    void setModified();
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -114,6 +125,7 @@ private:
     
     bool set;
     bool mIsModified;
+    bool mUseTabs;
 };
 
 class LineNumberArea : public QWidget {
@@ -125,15 +137,19 @@ public:
     QSize sizeHint() const {
         return QSize(codeEditor->lineNumberAreaWidth(), 0);
     }
+    
+    void codeFoldingEvent(int lineNumber);
+    void fold(int lineNumber);
+    void unfold(int lineNumber);
+    void isFolded(int lineNumber);
 
 protected:
     void paintEvent(QPaintEvent *event) {
         codeEditor->lineNumberAreaPaintEvent(event);
     }
 
-    void mousePressEvent(QMouseEvent *e);// {
-       // codeEditor->mousePressEvent(e);
-    //}
+    void mousePressEvent(QMouseEvent *e);
+    void mouseMoveEvent(QMouseEvent *e);
 
     void wheelEvent(QWheelEvent *event);
 

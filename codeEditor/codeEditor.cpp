@@ -1,6 +1,6 @@
 #include "codeEditor.h"
 
-//#include "preferences.h"
+//#include "../preferences.h"
 
 #include <QtGui>
 #include <QCompleter>
@@ -29,36 +29,52 @@ CodeEditor::CodeEditor(QString name, QWidget *parent, Highlighter *h):
     
     //Preferences *prefs = Preferences::instance();
     
-    bool b = true; //prefs->showCodeEditorMiniMap();
+    bool b = true;//prefs->showCodeEditorMiniMap();
     
     if (b) {
-        Highlighter *miniHighlighter = 0;
-        mMiniMap = new MiniMapC(this, miniHighlighter);
+        Highlighter *miniHighlighter;
+        mMiniMap = new MiniMapC(this, miniHighlighter, this);
         miniHighlighter = new Highlighter(mMiniMap->document());
         connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateMiniMapVisibleArea()));
         connect(mTimer, SIGNAL(timeout()), this, SLOT(updateMiniMapText()));
-        connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateMiniMapScrollPos()));
+        //connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateMiniMapScrollPos()));
     } else {
         mMiniMap = 0;
     }
+    
+    /*
+    if (prefs->showTabsSpaces()) {
+        QTextOption opt = document()->defaultTextOption();
+        opt.setFlags(opt.flags() | QTextOption::ShowTabsAndSpaces);
+        document()->setDefaultTextOption(opt);
+    }
+    */
+    
+    mUseTabs = true;//prefs->useTabs();
+    //if (prefs->wordWrap()) {
+        //setWordWrapMode(QTextOption::WordWrap);
+    //} else {
+        setWordWrapMode(QTextOption::NoWrap);
+    //}
 
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
     connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(updateLineNumberArea(QRect, int)));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightSelectedWord()));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(blockOrColumnChanged()));
+    connect(this, SIGNAL(textChanged()), this, SLOT(setModified()));
 
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();
     highlightSelectedWord();
 
     this->setCenterOnScroll(true);
-    this->setWordWrapMode(QTextOption::NoWrap);
+    setAcceptDrops(true);
 
     if (mMiniMap) {
         mMiniMap->adjustToParent();
         updateMiniMapText();
-        mTimer->start(5000);
+        //mTimer->start(5000);
     }
 }
 
@@ -68,6 +84,10 @@ CodeEditor::~CodeEditor() {
 
 QTextBlock CodeEditor::editorFirstVisibleBlock() {
     return firstVisibleBlock();
+}
+
+int CodeEditor::editorFirstVisibleBlockNumber() {
+    return firstVisibleBlock().blockNumber();
 }
 
 QPointF CodeEditor::editorContentOffset() {
@@ -169,21 +189,36 @@ void CodeEditor::highlightSelectedWord() {
 
 void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     int pageBottom = this->viewport()->height();
-    //QTextBlock currentBlock = this->document()->findBlock(this->textCursor().position());
+    QTextBlock currentBlock = this->document()->findBlock(this->textCursor().position());
 
     QPainter painter(lineNumberArea);
-    painter.fillRect(lineNumberArea->rect(), QColor(Qt::darkGray).darker(280));
+    painter.fillRect(lineNumberArea->rect(), QColor(Qt::darkGray).darker(280));//280
 
     QTextBlock block = firstVisibleBlock();
     QPointF viewportOffset = contentOffset();
     int blockNumber = block.blockNumber();
     int top = (int) blockBoundingGeometry(block).translated(contentOffset()).top();
     int bottom = top + (int) blockBoundingRect(block).height();
-
+    
+    bool current = false;
+    
     while (block.isValid() && top <= event->rect().bottom()) {
+        if (block == currentBlock) {
+            current = true;
+            int y = blockBoundingGeometry(currentBlock).translated(contentOffset()).top();
+            int h = blockBoundingGeometry(currentBlock).height();
+            int x = lineNumberArea->rect().x();
+            int w = lineNumberArea->width();
+            QRect rec(x, y - 1, w, h + 1);
+            //painter.fillRect(rec, QColor(Qt::darkGray).darker(380));//450
+            painter.setPen(QColor(Qt::white).darker(115));
+        } else {
+            painter.setPen(QColor(Qt::white).darker(180));
+        }
+        
         if (block.isVisible() && bottom >= event->rect().top()) {
             QString number = QString::number(blockNumber + 1);
-            painter.setPen(QColor(Qt::white).darker(180));
+            
             painter.drawText(-18, top, lineNumberArea->width(), fontMetrics().height(), Qt::AlignRight, number);
         }
 
@@ -197,7 +232,17 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     foldArea = 15;
     int xofs = lineNumberArea->width() - foldArea;
     QRect r(xofs, 0, foldArea, lineNumberArea->height());
-    painter.fillRect(r, QColor(Qt::lightGray).darker(100));
+    painter.fillRect(r, QColor(Qt::darkGray).darker(280));//280
+    
+    if (current) {
+        int y = blockBoundingGeometry(currentBlock).translated(contentOffset()).top();
+        int h = blockBoundingGeometry(currentBlock).height();
+        int x = lineNumberArea->width() - foldArea;
+        int w = lineNumberArea->width();
+        QRect rec(x, y - 1, w, h + 1);
+        //painter.fillRect(rec, QColor(Qt::darkGray).darker(380));//380
+    }
+    
     if (foldArea != rightArrowIcon.width()) {
         QPolygonF polygon;// = new QPolygonF();
 
@@ -210,6 +255,7 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
         polygon.append(QPointF(foldArea * 0.4, foldArea * 0.75));
         polygon.append(QPointF(foldArea * 0.8, foldArea * 0.5));
         QPainter iconPainter(&rightArrowIcon);
+        iconPainter.setRenderHint(QPainter::Antialiasing);
         iconPainter.setPen(Qt::NoPen);
         iconPainter.setBrush(QColor(Qt::lightGray).darker(150));
         iconPainter.drawPolygon(polygon);
@@ -219,6 +265,7 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
         polygon.append(QPointF(foldArea * 0.75, foldArea * 0.4));
         polygon.append(QPointF(foldArea * 0.5, foldArea * 0.8));
         QPainter iconPainterd(&downArrowIcon);
+        iconPainterd.setRenderHint(QPainter::Antialiasing);
         iconPainterd.setPen(Qt::NoPen);
         iconPainterd.setBrush(QColor(Qt::lightGray).darker(150));
         iconPainterd.drawPolygon(polygon);
@@ -234,6 +281,10 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
 
         //painter.drawPixmap(xofs, round(position.y()), downArrowIcon);
         //painter.drawPixmap(xofs, round(position.y()), rightArrowIcon);
+        QString txt = block.text();
+        if (txt.contains("function") || (txt.contains("if") && txt.contains("then") && !txt.contains("elseif"))) {
+            painter.drawPixmap(xofs, round(position.y()), downArrowIcon);
+        }
 
         if (breakPoints.contains(block.blockNumber())) {
             QLinearGradient linearGradient = QLinearGradient(xofs, round(position.y()), xofs + foldArea, round(position.y()) + foldArea);
@@ -272,10 +323,11 @@ void CodeEditor::updateMiniMapText() {
     //if (!set)
         //set = true;
 
-    //QTextDocument *bla = document();
-    QString bla = toPlainText();
-    mMiniMap->setCode(bla);
-    updateMiniMapScrollPos();
+    //QTextDocument *foo = document();
+    QString foo = toPlainText();
+    mMiniMap->setCode(foo);
+    //mMiniMap->setTextCursor(textCursor());
+    mMiniMap->updateVisibleArea();
 }
 
 void CodeEditor::updateMiniMapVisibleArea() {
@@ -290,71 +342,6 @@ void CodeEditor::updateMiniMapScrollPos() {
         return;
 
     mMiniMap->verticalScrollBar()->setValue(verticalScrollBar()->value());
-}
-
-void LineNumberArea::mousePressEvent(QMouseEvent *e) {
-    int xofs = width() - codeEditor->foldArea;
-    int fh = codeEditor->fontMetrics().lineSpacing();
-    float ys = e->pos().y();
-    //int lineNumber = 0;
-    if (e->pos().x() > xofs) {
-        QTextBlock block = codeEditor->editorFirstVisibleBlock();
-        int pageBottom = codeEditor->viewport()->height();
-        QPointF viewportOffset = codeEditor->editorContentOffset();
-
-        while (block.isValid()) {
-            QPointF position = codeEditor->editorBlockBoundingGeometry(block).topLeft() + viewportOffset;
-            if (position.y() > pageBottom) {
-                break;
-            }
-
-            if (position.y() < ys && (position.y() + fh) > ys && e->button() == Qt::LeftButton) {
-                int line = block.blockNumber();
-
-                if (codeEditor->bookmarks.contains(line)) {
-                    break;
-                }
-
-                if (codeEditor->breakPoints.contains(line)) {
-                    codeEditor->breakPoints.remove(codeEditor->breakPoints.indexOf(line));
-                } else {
-                    codeEditor->breakPoints.append(line);
-                }
-                update();
-                break;
-            } else if (position.y() < ys && (position.y() + fh) > ys && e->button() == Qt::RightButton) {
-                int line = block.blockNumber();
-
-                if (codeEditor->breakPoints.contains(line)) {
-                    break;
-                }
-
-                if (/*codeEditor->mBookmarks->contains(block)*/codeEditor->bookmarks.contains(line)) {
-                    codeEditor->bookmarks.remove(codeEditor->bookmarks.indexOf(line));
-                    //codeEditor->mBookmarks->removeAt(codeEditor->mBookmarks->indexOf(block));
-                } else {
-                    codeEditor->bookmarks.append(line);
-                    //codeEditor->mBookmarks->append(block);
-                }
-                update();
-                break;
-            }
-            block = block.next();
-        }
-    }
-}
-
-//TODO: get sensativity correct
-
-void LineNumberArea::wheelEvent(QWheelEvent *event) {
-    //event->accept();
-    int degrees = event->delta() / 8;
-    float steps = degrees / 3;
-    if (event->orientation() == Qt::Vertical) {
-        codeEditor->verticalScrollBar()->setValue(codeEditor->verticalScrollBar()->value() - steps);
-    } else if (event->orientation() == Qt::Horizontal) {
-        codeEditor->horizontalScrollBar()->setValue(codeEditor->horizontalScrollBar()->value() - event->delta());
-    }
 }
 
 void CodeEditor::wheelEvent(QWheelEvent *e) {
@@ -383,6 +370,18 @@ void CodeEditor::wheelEvent(QWheelEvent *e) {
         horizontalScrollBar()->setValue(horizontalScrollBar()->value() - e->delta());
     }
     */
+}
+
+void CodeEditor::lineNumberAreaMousePressEvent(QMouseEvent *e) {
+    QPlainTextEdit::mousePressEvent(e);
+}
+
+void CodeEditor::lineNumberAreaMouseMoveEvent(QMouseEvent *e) {
+    QPlainTextEdit::mouseMoveEvent(e);
+}
+
+void CodeEditor::lineNumberAreaWheelEvent(QWheelEvent *e) {
+    wheelEvent(e);
 }
 
 void CodeEditor::setCompleter(QCompleter *completer) {
@@ -488,6 +487,9 @@ void CodeEditor::keyPressEvent(QKeyEvent *e) {
     bool isShortcut = ((e->modifiers() & Qt::ControlModifier) && e->key() == Qt::Key_E); //command+E or control+E
     if (!c || !isShortcut) {
         QPlainTextEdit::keyPressEvent(e);
+        //mMiniMap->textCursor().setPosition(textCursor().position());
+        //mMiniMap->textCursor().insertText(e->text());
+        //mMiniMap->keyEvent(e);
     }
     
     if (Qt::ControlModifier && e->key() == Qt::Key_V) {
@@ -574,8 +576,13 @@ void CodeEditor::insertIndentation() {
     if (textCursor().hasSelection()) {
         indentMore();
     }
-    for (int i = 0; i < 4; ++i) {
-        textCursor().insertText(" ");
+    
+    if (!mUseTabs) {
+        for (int i = 0; i < 4; ++i) {
+            textCursor().insertText(" ");
+        }
+    } else {
+        textCursor().insertText("\t");
     }
 }
 
@@ -589,8 +596,12 @@ void CodeEditor::indentMore() {
     cursor.setPosition(block.position());
     while (block != end) {
         cursor.setPosition(block.position());
-        for (int i = 0; i < 4; ++i) {
-            textCursor().insertText(" ");
+        if (!mUseTabs) {
+            for (int i = 0; i < 4; ++i) {
+                textCursor().insertText(" ");
+            }
+        } else {
+            textCursor().insertText("\t");
         }
         block= block.next();
     }
@@ -604,8 +615,13 @@ void CodeEditor::autoCompleteEnter() {
             addClosingBracket = false,
             ch = false;
     QString str = textCursor().block().text();
-    QString spaces = getIndentation(str);
-    QString tab = "    ";
+    QString indentation = getIndentation(str);
+    QString tab = "";
+    if (mUseTabs) {
+        tab = "\t";
+    } else {
+        tab = "    ";
+    }
     
     if (textCursor().atBlockEnd()) {
         if (str.contains("function") && str.endsWith(')')) {
@@ -627,21 +643,21 @@ void CodeEditor::autoCompleteEnter() {
     
     if (str.contains("{}") && str.endsWith("}") && textLeftOfCursor() == "{") {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces);
+        textCursor().insertText(indentation);
         moveCursor(QTextCursor::Up);
         ch = true;
     }
     
     if (str.contains("()") && str.endsWith(")") && textLeftOfCursor() == "(") {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces);
+        textCursor().insertText(indentation);
         moveCursor(QTextCursor::Up);
         ch = true;
     }
     
     if (str.contains("[]") && str.endsWith("]") && textLeftOfCursor() == "[") {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces);
+        textCursor().insertText(indentation);
         moveCursor(QTextCursor::Up);
         ch = true;
     }
@@ -654,30 +670,30 @@ void CodeEditor::autoCompleteEnter() {
     
     if (addEnd) {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces + "end");
+        textCursor().insertText(indentation + "end");
         moveCursor(QTextCursor::Up);
     }
     
     if (addClosingCurlyBrace) {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces + "}");
+        textCursor().insertText(indentation + "}");
         moveCursor(QTextCursor::Up);
     }
     
     if (addClosingParen) {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces + ")");
+        textCursor().insertText(indentation + ")");
         moveCursor(QTextCursor::Up);
     }
     
     if (addClosingBracket) {
         textCursor().insertText(tab + "\n");
-        textCursor().insertText(spaces + "]");
+        textCursor().insertText(indentation + "]");
         moveCursor(QTextCursor::Up);
     }
     
-    if (spaces.length() > 1 && !autoIndent) {
-        textCursor().insertText(spaces);
+    if (indentation.length() > 0 && !autoIndent) {
+        textCursor().insertText(indentation);
     }
     
     if (ch) {
@@ -689,10 +705,24 @@ void CodeEditor::autoCompleteEnter() {
 
 QString CodeEditor::getIndentation(const QString &text) {
     QString indentation = "";
+    int spaceCount = 0;
     for (int i = 0; i < text.length(); ++i) {
         QChar ch = text.at(i);
-        if (ch == ' ') {
-            indentation += " ";
+        
+        if (mUseTabs) {
+            if (spaceCount % 4 == 0 && spaceCount > 0) {
+                indentation += "\t";
+            }
+        }
+        
+        if (ch == '\t') {
+            indentation += "\t";
+        } else if (ch == ' ') {
+            if (mUseTabs) {
+                spaceCount++;
+            } else {
+                indentation += " ";
+            }
         } else {
             break;
         }
@@ -758,6 +788,77 @@ bool CodeEditor::openFile(const QString &path) {
     }
     
     return true;
+}
+
+void CodeEditor::setModified() {
+    mIsModified = true;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void LineNumberArea::mousePressEvent(QMouseEvent *e) {
+    int xofs = width() - codeEditor->foldArea;
+    int fh = codeEditor->fontMetrics().lineSpacing();
+    float ys = e->pos().y();
+    //int lineNumber = 0;
+    if (e->pos().x() > xofs) {
+        QTextBlock block = codeEditor->editorFirstVisibleBlock();
+        int pageBottom = codeEditor->viewport()->height();
+        QPointF viewportOffset = codeEditor->editorContentOffset();
+
+        while (block.isValid()) {
+            QPointF position = codeEditor->editorBlockBoundingGeometry(block).topLeft() + viewportOffset;
+            if (position.y() > pageBottom) {
+                break;
+            }
+
+            if (position.y() < ys && (position.y() + fh) > ys && e->button() == Qt::LeftButton) {
+                int line = block.blockNumber();
+
+                if (codeEditor->bookmarks.contains(line)) {
+                    break;
+                }
+
+                if (codeEditor->breakPoints.contains(line)) {
+                    codeEditor->breakPoints.remove(codeEditor->breakPoints.indexOf(line));
+                } else {
+                    codeEditor->breakPoints.append(line);
+                }
+                update();
+                break;
+            } else if (position.y() < ys && (position.y() + fh) > ys && e->button() == Qt::RightButton) {
+                int line = block.blockNumber();
+
+                if (codeEditor->breakPoints.contains(line)) {
+                    break;
+                }
+
+                if (/*codeEditor->mBookmarks->contains(block)*/codeEditor->bookmarks.contains(line)) {
+                    codeEditor->bookmarks.remove(codeEditor->bookmarks.indexOf(line));
+                    //codeEditor->mBookmarks->removeAt(codeEditor->mBookmarks->indexOf(block));
+                } else {
+                    codeEditor->bookmarks.append(line);
+                    //codeEditor->mBookmarks->append(block);
+                }
+                update();
+                break;
+            }
+            block = block.next();
+        }
+    }
+    if (e->pos().x() < xofs) {
+        codeEditor->lineNumberAreaMousePressEvent(e);
+    }
+}
+
+void LineNumberArea::mouseMoveEvent(QMouseEvent *e) {
+    codeEditor->lineNumberAreaMouseMoveEvent(e);
+}
+
+//TODO: get sensativity correct
+
+void LineNumberArea::wheelEvent(QWheelEvent *e) {
+    codeEditor->lineNumberAreaWheelEvent(e);
 }
 
 
