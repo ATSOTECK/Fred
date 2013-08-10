@@ -16,8 +16,10 @@ public:
 
     void highlightSelectedWord(const QString &text);
     
-    void setSelectedWord(const QString &word);
+    void setSelectedWord(QString &word);
     void rehighlightLines(int line);
+    
+    void setPar(QTextDocument *d);
 
 protected:
     void highlightBlock(const QString &text);
@@ -42,9 +44,16 @@ private:
     QTextCharFormat quotationFormat;
     QTextCharFormat singleQuotationFormat;
     QTextCharFormat functionFormat;
+    QTextCharFormat argFormat;
+    QTextCharFormat varFormat;
+    QTextCharFormat objFormat;
     QTextCharFormat selectedWordFormat;
     QTextCharFormat numberFormat;
     QTextCharFormat escapeFormat;
+    QTextCharFormat doubleBracketFormat;
+    
+    QRegExp doubleBracketStart;
+    QRegExp doubleBracketEnd;
 
     QTextDocument *mParent;
     QString mSelectedWord;

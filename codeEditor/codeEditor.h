@@ -7,6 +7,7 @@
 #include <QCompleter>
 #include <QList>
 #include <QWheelEvent>
+#include <QWidget>
 
 #include "bookMark.h"
 #include "highlighter.h"
@@ -63,12 +64,20 @@ public:
     void lineNumberAreaMousePressEvent(QMouseEvent *e);
     void lineNumberAreaMouseMoveEvent(QMouseEvent *e);
     void lineNumberAreaWheelEvent(QWheelEvent *e);
+    
+    void findMatch(QString text, bool next = false, bool caseSensitive = false, bool wholeWord = false, int foo = 5);
 
 public slots:
     void findText();
     void updateMiniMapText();
     void updateMiniMapVisibleArea();
     void setModified();
+    
+    //preferences
+    void setUseMiniMap(bool mini);
+    void setUseTabs(bool tabs);
+    void setShowTabsSpaces(bool tabsSpaces);
+    void setUseWordWrap(bool wrap);
 
 protected:
     void resizeEvent(QResizeEvent *event);
@@ -77,25 +86,33 @@ protected:
     void focusInEvent(QFocusEvent *e);
     
     void mouseReleaseEvent(QMouseEvent *e);
+    
+    //void paintEvent(QPaintEvent *e);
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
     void highlightCurrentLine();
-    void highlightSelectedWord();
+    void highlightSelectedWord(QString txt = "");
     void updateLineNumberArea(const QRect & rect, int dy);
     void updateMiniMapScrollPos();
     void insertCompletion(const QString &completion);
     void blockOrColumnChanged();
+    void updateCorner();
     
 signals:
     void statusInfoChanged(QString info);
 
 private:
+    friend class LineNumberArea;
+    
     void completeBraces(QString text);
     void completeQuotes(QString text);
     void insertIndentation();
     void indentMore();
     void autoCompleteEnter();
+    bool checkNextLine(QString &txt);
+    void setUpMiniMap();
+    void tearDownMiniMap();
     
     QString getIndentation(const QString &text);
     
@@ -126,6 +143,8 @@ private:
     bool set;
     bool mIsModified;
     bool mUseTabs;
+    
+    QWidget *corner;
 };
 
 class LineNumberArea : public QWidget {
@@ -142,6 +161,8 @@ public:
     void fold(int lineNumber);
     void unfold(int lineNumber);
     void isFolded(int lineNumber);
+    
+    int findClosing(QTextBlock block);
 
 protected:
     void paintEvent(QPaintEvent *event) {

@@ -22,22 +22,23 @@ CodeEditor::CodeEditor(QString name, QWidget *parent, Highlighter *h):
     set(false),
     mIsModified(false)
 {
+    corner = new QWidget(this);
+    corner->setStyleSheet("background: #161616;");
+    corner->setVisible(false);
+    
     lineNumberArea = new LineNumberArea(this);
     highlighter = h;
+    
+    //highlighter->setPar(document()); causes pointer error for some reason
     
     mTimer = new QTimer(this);
     
     //Preferences *prefs = Preferences::instance();
     
-    bool b = true;//prefs->showCodeEditorMiniMap();
+    bool b = false;//prefs->showCodeEditorMiniMap();
     
     if (b) {
-        Highlighter *miniHighlighter;
-        mMiniMap = new MiniMapC(this, miniHighlighter, this);
-        miniHighlighter = new Highlighter(mMiniMap->document());
-        connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateMiniMapVisibleArea()));
-        connect(mTimer, SIGNAL(timeout()), this, SLOT(updateMiniMapText()));
-        //connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateMiniMapScrollPos()));
+        setUpMiniMap();
     } else {
         mMiniMap = 0;
     }
@@ -50,36 +51,69 @@ CodeEditor::CodeEditor(QString name, QWidget *parent, Highlighter *h):
     }
     */
     
-    mUseTabs = true;//prefs->useTabs();
-    //if (prefs->wordWrap()) {
-        //setWordWrapMode(QTextOption::WordWrap);
-    //} else {
+    mUseTabs = true;/*prefs->useTabs();
+    if (prefs->wordWrap()) {
+        setWordWrapMode(QTextOption::WordWrap);
+    } else {
         setWordWrapMode(QTextOption::NoWrap);
-    //}
+    }
+    */
 
     connect(this, SIGNAL(blockCountChanged(int)), this, SLOT(updateLineNumberAreaWidth(int)));
     connect(this, SIGNAL(updateRequest(QRect, int)), this, SLOT(updateLineNumberArea(QRect, int)));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightCurrentLine()));
-    connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightSelectedWord()));
+    //connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(highlightSelectedWord()));
     connect(this, SIGNAL(cursorPositionChanged()), this, SLOT(blockOrColumnChanged()));
     connect(this, SIGNAL(textChanged()), this, SLOT(setModified()));
-
+    
+    /*
+    connect(prefs, SIGNAL(showCodeEditorMiniMapChanged(bool)), this, SLOT(setUseMiniMap(bool)));
+    connect(prefs, SIGNAL(setUseTabsChanged(bool)), this, SLOT(setUseTabs(bool)));
+    connect(prefs, SIGNAL(setShowTabsSpacesChanged(bool)), this, SLOT(setShowTabsSpaces(bool)));
+    connect(prefs, SIGNAL(setUseWordWrapChanged(bool)), this, SLOT(setUseWordWrap(bool)));
+    */
+    
+    //connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateCorner()));
+    //connect(horizontalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateCorner()));
+    //connect(verticalScrollBar(), SIGNAL(rangeChanged(int,int)), this, SLOT(updateCorner()));
+    //connect(horizontalScrollBar(), SIGNAL(rangeChanged(int,int)), this, SLOT(updateCorner()));
+    
+    //connect(verticalScrollBar(), SIGNAL(actionTriggered(int)), this, SLOT(updateCorner()));
+    //connect(horizontalScrollBar(), SIGNAL(actionTriggered(int)), this, SLOT(updateCorner()));
+    
     updateLineNumberAreaWidth(0);
     highlightCurrentLine();
-    highlightSelectedWord();
+    //highlightSelectedWord();
 
     this->setCenterOnScroll(true);
     setAcceptDrops(true);
-
-    if (mMiniMap) {
-        mMiniMap->adjustToParent();
-        updateMiniMapText();
-        //mTimer->start(5000);
-    }
+    
+    setFrameStyle(QFrame::NoFrame);
 }
 
 CodeEditor::~CodeEditor() {
 
+}
+
+void CodeEditor::setUpMiniMap() {
+    Highlighter *miniHighlighter = NULL;
+    mMiniMap = new MiniMapC(this, miniHighlighter, this);
+    miniHighlighter = new Highlighter(mMiniMap->document());
+    connect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateMiniMapVisibleArea()));
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(updateMiniMapText()));
+    //connect(verticalScrollBar(), SIGNAL(valueChanged(int)), this, SLOT(updateMiniMapScrollPos()));
+    mMiniMap->adjustToParent();
+    updateMiniMapText();
+    mTimer->start(5000);
+    mMiniMap->show();
+}
+
+void CodeEditor::tearDownMiniMap() {
+    disconnect(this, SIGNAL(updateRequest(QRect,int)), this, SLOT(updateMiniMapVisibleArea()));
+    disconnect(mTimer, SIGNAL(timeout()), this, SLOT(updateMiniMapText()));
+    delete mMiniMap;
+    mMiniMap = 0;
+    mTimer->stop();
 }
 
 QTextBlock CodeEditor::editorFirstVisibleBlock() {
@@ -163,9 +197,47 @@ void CodeEditor::highlightCurrentLine() {
     setExtraSelections(extraSelections);
 }
 
-void CodeEditor::highlightSelectedWord() {
+void CodeEditor::findMatch(QString text, bool next, bool caseSensitive, bool wholeWord, int foo) {
+    if (next) {
+        moveCursor(QTextCursor::NoMove, QTextCursor::KeepAnchor);
+    } else {
+        moveCursor(QTextCursor::StartOfWord, QTextCursor::KeepAnchor);
+    }
+    
+    QTextDocument::FindFlags flags;
+    
+    if (foo < 5) {
+       flags = QTextDocument::FindFlags(foo);
+    }
+    
+    if (caseSensitive) {
+        flags |= QTextDocument::FindCaseSensitively;
+    }
+    
+    if (wholeWord) {
+        flags |= QTextDocument::FindWholeWords;
+    }
+    
+    bool found = find(text, flags);
+    
+    if (!found) {
+        QTextCursor cursor = textCursor();
+        moveCursor(QTextCursor::Start);
+        found = find(text, flags);
+        if (!found) {
+            setTextCursor(cursor);
+        }
+    } else {
+        //highlightSelectedWord(text);
+    }
+}
+
+void CodeEditor::highlightSelectedWord(QString txt) {
     QString word = textUnderCursor();
-    if (word == "")
+    if (!txt.isEmpty()) {
+        word = txt;
+    }
+    if (word.isEmpty())
         return;
     if (word != mSelectedText) {
         mSelectedText = word;
@@ -180,10 +252,10 @@ void CodeEditor::highlightSelectedWord() {
             pos = cursor.position() + wordLength;
             cursor = document()->find(word, pos, QTextDocument::FindCaseSensitively);
         }
-        //int size = lines.size();
-        //for (int  i = 0; i < size; ++i) {
-           // highlighter->rehighlightLines(lines.at(i));
-        //}
+        int size = lines.size();
+        for (int  i = 0; i < size; ++i) {
+            highlighter->rehighlightLines(lines.at(i));
+        }
     }
 }
 
@@ -205,11 +277,13 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block == currentBlock) {
             current = true;
+            /*
             int y = blockBoundingGeometry(currentBlock).translated(contentOffset()).top();
             int h = blockBoundingGeometry(currentBlock).height();
             int x = lineNumberArea->rect().x();
             int w = lineNumberArea->width();
-            QRect rec(x, y - 1, w, h + 1);
+            */
+            //QRect rec(x, y - 1, w, h + 1);
             //painter.fillRect(rec, QColor(Qt::darkGray).darker(380));//450
             painter.setPen(QColor(Qt::white).darker(115));
         } else {
@@ -235,11 +309,13 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
     painter.fillRect(r, QColor(Qt::darkGray).darker(280));//280
     
     if (current) {
+        /*
         int y = blockBoundingGeometry(currentBlock).translated(contentOffset()).top();
         int h = blockBoundingGeometry(currentBlock).height();
         int x = lineNumberArea->width() - foldArea;
         int w = lineNumberArea->width();
-        QRect rec(x, y - 1, w, h + 1);
+        */
+        //QRect rec(x, y - 1, w, h + 1);
         //painter.fillRect(rec, QColor(Qt::darkGray).darker(380));//380
     }
     
@@ -283,7 +359,15 @@ void CodeEditor::lineNumberAreaPaintEvent(QPaintEvent *event) {
         //painter.drawPixmap(xofs, round(position.y()), rightArrowIcon);
         QString txt = block.text();
         if (txt.contains("function") || (txt.contains("if") && txt.contains("then") && !txt.contains("elseif"))) {
-            painter.drawPixmap(xofs, round(position.y()), downArrowIcon);
+            if (!mFoldedLines.contains(block.blockNumber())) {
+                if (block.isVisible()) {
+                    painter.drawPixmap(xofs, round(position.y()), downArrowIcon);
+                }
+            }
+        }
+        
+        if (mFoldedLines.contains(block.blockNumber()) && block.isVisible()) {
+            painter.drawPixmap(xofs, round(position.y()), rightArrowIcon);
         }
 
         if (breakPoints.contains(block.blockNumber())) {
@@ -342,6 +426,14 @@ void CodeEditor::updateMiniMapScrollPos() {
         return;
 
     mMiniMap->verticalScrollBar()->setValue(verticalScrollBar()->value());
+}
+
+void CodeEditor::updateCorner() {
+    if (verticalScrollBar()->isVisible() && horizontalScrollBar()->isVisible()) {
+        setCornerWidget(corner);
+    } else {
+        setCornerWidget(0);
+    }
 }
 
 void CodeEditor::wheelEvent(QWheelEvent *e) {
@@ -534,13 +626,19 @@ void CodeEditor::mouseReleaseEvent(QMouseEvent *e) {
 
 void CodeEditor::completeBraces(QString text) {
     QString t;
+    QString txt = textCursor().block().text();
     
     if (text == "{") {
         t = "}";
-    } else if (text == "[") {
+    } else if (text == "[" && !txt.contains("--")) {
         t = "]";
     } else if (text == "(") {
         t = ")";
+    }
+    
+    if (t.isEmpty()) {
+        textCursor().insertText(text);
+        return;
     }
     
     if (mSelectedText.length() > 0) {
@@ -624,19 +722,35 @@ void CodeEditor::autoCompleteEnter() {
     }
     
     if (textCursor().atBlockEnd()) {
-        if (str.contains("function") && str.endsWith(')')) {
-            addEnd = true;
-        } if (str.contains("if") && str.contains("then") && str.endsWith('n')) {
-            addEnd = true;
-        } if (str.contains("else") && str.endsWith('e')) {
-            addEnd = true;
-        } if (str.contains("do") && str.endsWith('o')) {
-            addEnd = true;
-        } else if (str.endsWith('{')) {
+        if (str.contains("function") && (str.endsWith(')') || str.endsWith(") "))) {
+            if (checkNextLine(indentation)) {
+                addEnd = true;
+            } else {
+                autoIndent = true;
+            }
+        } if (str.contains("if") && str.contains("then") && (str.endsWith('n') || str.endsWith("n "))) {
+            if (checkNextLine(indentation)) {
+                addEnd = true;
+            } else {
+                autoIndent = true;
+            }
+        } if (str.contains("else") && (str.endsWith('e') || str.endsWith("e "))) {
+            if (checkNextLine(indentation)) {
+                addEnd = true;
+            } else {
+                autoIndent = true;
+            }
+        } if (str.contains("do") && (str.endsWith('o') || str.endsWith("o "))) {
+            if (checkNextLine(indentation)) {
+                addEnd = true;
+            } else {
+                autoIndent = true;
+            }
+        } else if (str.endsWith('{') || str.endsWith("{ ")) {
             addClosingCurlyBrace = true;
-        } else if (str.endsWith('(')) {
+        } else if (str.endsWith('(') || str.endsWith("( ")) {
             addClosingParen = true;
-        } else if (str.endsWith('[')) {
+        } else if (str.endsWith('[') || str.endsWith("[ ")) {
             addClosingBracket = true;
         }
     }
@@ -665,6 +779,7 @@ void CodeEditor::autoCompleteEnter() {
     textCursor().insertText("\n");
     
     if (autoIndent) {
+        textCursor().insertText(indentation);
         insertIndentation();
     }
     
@@ -700,6 +815,22 @@ void CodeEditor::autoCompleteEnter() {
         for (int i = 0; i < 4; ++ i) {
             moveCursor(QTextCursor::NextCharacter);
         }
+    }
+}
+
+bool CodeEditor::checkNextLine(QString &txt) {
+    QTextCursor cursor = textCursor();
+    cursor.movePosition(QTextCursor::NextBlock);
+    QString temp = cursor.block().text();
+    QString tempIndentation = getIndentation(temp);
+    if (tempIndentation == txt) {
+        if (temp.isEmpty()) {
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return false;
     }
 }
 
@@ -756,6 +887,8 @@ bool CodeEditor::saveToFile(QString &path) {
         fileName += ".lua";
     }
     
+    qDebug() << "script filename" << fileName;
+    
     QFile file(fileName);
     if (file.open(QFile::WriteOnly | QFile::Text)) {
         QTextStream out(&file);
@@ -794,6 +927,38 @@ void CodeEditor::setModified() {
     mIsModified = true;
 }
 
+void CodeEditor::setUseMiniMap(bool mini) {
+    if (mini) {
+        setUpMiniMap();
+    } else {
+        tearDownMiniMap();
+    }
+}
+
+void CodeEditor::setUseTabs(bool tabs) {
+    mUseTabs = tabs;
+}
+
+void CodeEditor::setShowTabsSpaces(bool tabsSpaces) {
+    if (tabsSpaces) {
+        QTextOption opt = document()->defaultTextOption();
+        opt.setFlags(opt.flags() | QTextOption::ShowTabsAndSpaces);
+        document()->setDefaultTextOption(opt);
+    } else {
+        QTextOption opt = document()->defaultTextOption();
+        opt.setFlags(0x0);
+        document()->setDefaultTextOption(opt);
+    }
+}
+
+void CodeEditor::setUseWordWrap(bool wrap) {
+    if (wrap) {
+        setWordWrapMode(QTextOption::WordWrap);
+    } else {
+        setWordWrapMode(QTextOption::NoWrap);
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void LineNumberArea::mousePressEvent(QMouseEvent *e) {
@@ -814,6 +979,20 @@ void LineNumberArea::mousePressEvent(QMouseEvent *e) {
 
             if (position.y() < ys && (position.y() + fh) > ys && e->button() == Qt::LeftButton) {
                 int line = block.blockNumber();
+                
+                QString txt = block.text();
+                if (txt.contains("function") || (txt.contains("if") && txt.contains("then") && !txt.contains("elseif"))) {
+                    if (!codeEditor->mFoldedLines.contains(block.blockNumber())) {
+                        fold(block.blockNumber());
+                    } else {
+                        unfold(block.blockNumber());
+                    }
+                    break;
+                }
+                
+                if (codeEditor->mFoldedLines.contains(line)) {
+                    break;
+                }
 
                 if (codeEditor->bookmarks.contains(line)) {
                     break;
@@ -828,6 +1007,10 @@ void LineNumberArea::mousePressEvent(QMouseEvent *e) {
                 break;
             } else if (position.y() < ys && (position.y() + fh) > ys && e->button() == Qt::RightButton) {
                 int line = block.blockNumber();
+                
+                if (codeEditor->mFoldedLines.contains(line)) {
+                    break;
+                }
 
                 if (codeEditor->breakPoints.contains(line)) {
                     break;
@@ -855,35 +1038,73 @@ void LineNumberArea::mouseMoveEvent(QMouseEvent *e) {
     codeEditor->lineNumberAreaMouseMoveEvent(e);
 }
 
-//TODO: get sensativity correct
-
 void LineNumberArea::wheelEvent(QWheelEvent *e) {
     codeEditor->lineNumberAreaWheelEvent(e);
 }
 
+int LineNumberArea::findClosing(QTextBlock block) {
+    QTextBlock blk = block.next();
+    QString txt = blk.text();
+    qDebug() << "B" << blk.blockNumber();
+    QString indentation = codeEditor->getIndentation(txt);
+    QString tmp;
+    int line;
+    bool found = false;
+    
+    blk = blk.next();
+    while (blk.isValid() && !found) {
+        txt = blk.text();
+        if (txt.contains("end")) {
+            tmp = codeEditor->getIndentation(txt);
+            if (tmp == indentation) {
+                found = true;
+                line = blk.blockNumber();
+            }
+        }
+        blk = blk.next();
+    }
+    
+    return line;
+}
 
+void LineNumberArea::fold(int lineNumber) {
+    QTextBlock startBlock = codeEditor->document()->findBlockByLineNumber(lineNumber - 1);
+    int endPos = findClosing(startBlock);
+    QTextBlock endBlock = codeEditor->document()->findBlockByLineNumber(endPos);
+    
+    QTextBlock block = startBlock.next();
+    block = block.next();
+    while (block.isValid() && block != endBlock) {
+        block.setVisible(false);
+        block.setLineCount(0);
+        block = block.next();
+    }
+    
+    //add fold eher
+    codeEditor->mFoldedLines.append(startBlock.blockNumber() + 1);
+    codeEditor->document()->markContentsDirty(startBlock.position(), endPos);
+}
 
+void LineNumberArea::unfold(int lineNumber) {
+    QTextBlock startBlock = codeEditor->document()->findBlockByLineNumber(lineNumber - 1);
+    int endPos = findClosing(startBlock);
+    QTextBlock endBlock = codeEditor->document()->findBlockByLineNumber(endPos);
+    
+    QTextBlock block = startBlock.next();
+    block = block.next();
+    while (block.isValid() && block != endBlock) {
+        block.setVisible(true);
+        block.setLineCount(block.layout()->lineCount());
+        endPos = block.position() + block.length();
+        if (codeEditor->mFoldedLines.contains(block.blockNumber())) {
+            int close = findClosing(block);
+            block = codeEditor->document()->findBlockByLineNumber(close);
+        } else {
+            block = block.next();
+        }
+    }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    codeEditor->mFoldedLines.removeAt(codeEditor->mFoldedLines.indexOf(startBlock.blockNumber() + 1));
+    codeEditor->document()->markContentsDirty(startBlock.position(), endPos);
+}

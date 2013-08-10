@@ -45,6 +45,11 @@ MainWindow::MainWindow(QWidget *parent) :
     qInstallMessageHandler(catchMessage);
     
     setCentralWidget(ui->tabs);
+    
+    setCorner(Qt::BottomLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
+    setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
+    setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
 
     mBlack = QColor("black");
     mBlue = QColor("blue");
