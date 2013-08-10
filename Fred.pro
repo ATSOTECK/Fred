@@ -28,7 +28,8 @@ SOURCES += main.cpp\
     command.cpp \
     codeEditor/codeEditor.cpp \
     codeEditor/highlighter.cpp \
-    codeEditor/miniMapC.cpp
+    codeEditor/miniMapC.cpp \
+    codeEditor/searchWidget.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
@@ -39,7 +40,8 @@ HEADERS  += mainwindow.h \
     command.h \
     codeEditor/codeEditor.h \
     codeEditor/highlighter.h \
-    codeEditor/miniMapC.h
+    codeEditor/miniMapC.h \
+    codeEditor/searchWidget.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \

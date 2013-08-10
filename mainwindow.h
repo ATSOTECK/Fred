@@ -28,6 +28,7 @@ class MainWindow;
 }
 
 class CodeEditor;
+class SearchWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -58,6 +59,9 @@ public slots:
     QAbstractItemModel *modelFromFile(QCompleter *c, const QString &fileName);
     
     void updateStatusLabel(const QString &text);
+    
+    void find();
+    void closeFind();
     
 private slots:
     void pauseButtonClicked();
@@ -139,6 +143,9 @@ private:
     CodeEditor *mMainCodeEditor;
     
     QLabel *mStatusLabel;
+    
+    SearchWidget *mSearchWidget;
+    bool mSearchWidgetAdded;
 };
 
 void setMainWindow(MainWindow *mw);

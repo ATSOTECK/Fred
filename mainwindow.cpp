@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 
 #include "codeEditor/codeEditor.h"
+#include "codeEditor/searchWidget.h"
 
 #include <QtCore>
 #include <QStringListModel>
@@ -38,7 +39,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     kernelSize(3),
-    mStatusLabel(new QLabel)
+    mStatusLabel(new QLabel),
+    mSearchWidget(new SearchWidget(0, this)),
+    mSearchWidgetAdded(false)
 {
     ui->setupUi(this);
     
@@ -127,6 +130,10 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mMainCodeEditor, SIGNAL(statusInfoChanged(QString)), this, SLOT(updateStatusLabel(QString)));
     
     ui->tabs->addTab(mMainCodeEditor, "main.lua");
+    
+    connect(mSearchWidget, SIGNAL(closeButtonClicked()), this, SLOT(closeFind()));
+    mSearchWidget->setVisible(false);
+    mSearchWidget->setCodeEditor(mMainCodeEditor);
     
     mStatusLabel->setText("");
     ui->statusBar->addWidget(mStatusLabel);
@@ -332,6 +339,22 @@ QAbstractItemModel *MainWindow::modelFromFile(QCompleter *c, const QString &file
     //QApplication::restoreOverrideCursor();
 #endif
     return new QStringListModel(words, c);
+}
+
+void MainWindow::find() {
+    if (ui->tabs->currentIndex() == 0)
+        return;
+    
+    if (!mSearchWidgetAdded) {
+        ui->statusBar->addWidget(mSearchWidget);
+    }
+    mSearchWidget->show();
+    mSearchWidget->lineEdit()->setFocus(Qt::MouseFocusReason);
+    mSearchWidgetAdded = true;
+}
+
+void MainWindow::closeFind() {
+    ui->statusBar->removeWidget(mSearchWidget);
 }
 
 void MainWindow::save() {
