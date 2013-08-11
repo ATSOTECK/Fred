@@ -23,5 +23,6 @@
         <file>Images/toster.png</file>
         <file>Images/loading.png</file>
         <file>wordlist.txt</file>
+        <file>Images/close.png</file>
     </qresource>
 </RCC>

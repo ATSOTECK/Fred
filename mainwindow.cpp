@@ -60,6 +60,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mGreen = QColor("green");
     
     ui->console->setReadOnly(true);
+    ui->consoleDockWidgetContents->setContentsMargins(0, 0, 0, 0);
+    ui->commandsDockWidgetContents->setContentsMargins(0, 0, 0, 0);
     
     debug("Starting...");
     QString version = CV_VERSION;
@@ -137,6 +139,9 @@ MainWindow::MainWindow(QWidget *parent) :
     
     mStatusLabel->setText("");
     ui->statusBar->addWidget(mStatusLabel);
+    
+    //setWindowTitle("SublimeCV");
+    setWindowTitle("Fred 0.0.1");
 
     timerTime = 16;
 
@@ -244,6 +249,8 @@ void MainWindow::setUpActions() {
     ui->menuView->addAction(mHideConsoleAction);
     
     connect(mHideConsoleAction, SIGNAL(triggered()), this, SLOT(hideConsole()));
+    
+    connect(ui->actionFind, SIGNAL(triggered()), this, SLOT(find()));
 }
 
 int MainWindow::getCamCount() {
@@ -569,8 +576,13 @@ void MainWindow::clearConsoleClicked() {
 }
 
 void MainWindow::hideConsole() {
-    ui->consoleDock->setHidden(!ui->consoleDock->isHidden());
-    ui->commandsDock->setHidden(!ui->commandsDock->isHidden());
+    if (!mSearchWidgetAdded) {
+        ui->consoleDock->setHidden(!ui->consoleDock->isHidden());
+        //ui->commandsDock->setHidden(!ui->commandsDock->isHidden());
+    } else {
+        closeFind();
+        mSearchWidgetAdded = false;
+    }
 }
 
 void MainWindow::showToolbarClicked() {

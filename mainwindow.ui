@@ -303,7 +303,7 @@ background: rgba(100, 100, 100, 150);
 QLineEdit{
 color: #444;
 background: #ddd;
-border-radius: 6px;
+border-radius: 12px;
 padding: 1px 4px 3px 2px;
 border: 1px solid #ddd;
 border-left: 2px solid #ddd;
@@ -313,8 +313,10 @@ margin-top: 2px;
 
 QLineEdit:focus {
 color: #000;
+/*
 border-left-color: #888;
 border-top-color: #555;
+*/
 }
 /*//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////*/
 QPlainTextEdit {
@@ -379,7 +381,7 @@ background: #e4e4e4;
 
 QPushButton {
 background: #437DCD/*#6EC7D7#97b9c4*/;
-border-radius: 5px;
+border-radius: 12px;
 padding: 4px 8px;
 border: 0;
 margin-left: 5px;
@@ -509,6 +511,12 @@ QPlainTextEdit {
 selection-color: #FFFFFF; 
 selection-background-color: #437DCD;
 }
+
+QTextEdit {
+selection-color: #FFFFFF; 
+selection-background-color: #437DCD;
+}
+
 
 QTextBrowser {
 selection-color: #FFFFFF; 
@@ -643,6 +651,7 @@ selection-background-color: #437DCD;
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="actionFind"/>
    </widget>
    <widget class="QMenu" name="menuDevices">
     <property name="title">
@@ -706,8 +715,20 @@ selection-background-color: #437DCD;
    <attribute name="dockWidgetArea">
     <number>8</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents">
+   <widget class="QWidget" name="commandsDockWidgetContents">
     <layout class="QHBoxLayout" name="horizontalLayout">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item>
       <widget class="QTreeWidget" name="commands">
        <property name="enabled">
@@ -733,8 +754,20 @@ selection-background-color: #437DCD;
    <attribute name="dockWidgetArea">
     <number>8</number>
    </attribute>
-   <widget class="QWidget" name="dockWidgetContents_2">
+   <widget class="QWidget" name="consoleDockWidgetContents">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
      <item>
       <widget class="QTextEdit" name="console"/>
      </item>
@@ -891,6 +924,14 @@ selection-background-color: #437DCD;
   <action name="actionGettingStarted">
    <property name="text">
     <string>Getting Started</string>
+   </property>
+  </action>
+  <action name="actionFind">
+   <property name="text">
+    <string>Find</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>
