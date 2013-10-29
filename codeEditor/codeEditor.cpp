@@ -1045,7 +1045,7 @@ void LineNumberArea::wheelEvent(QWheelEvent *e) {
 int LineNumberArea::findClosing(QTextBlock block) {
     QTextBlock blk = block.next();
     QString txt = blk.text();
-    qDebug() << "B" << blk.blockNumber();
+    //qDebug() << "B" << blk.blockNumber();
     QString indentation = codeEditor->getIndentation(txt);
     QString tmp;
     int line;

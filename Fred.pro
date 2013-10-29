@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = Fred
+TARGET = Blinkenlights
 TEMPLATE = app
 
 DESTDIR = ../bin
@@ -29,7 +29,9 @@ SOURCES += main.cpp\
     codeEditor/codeEditor.cpp \
     codeEditor/highlighter.cpp \
     codeEditor/miniMapC.cpp \
-    codeEditor/searchWidget.cpp
+    codeEditor/searchWidget.cpp \
+    projectItem.cpp \
+    projectAction.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
@@ -41,7 +43,9 @@ HEADERS  += mainwindow.h \
     codeEditor/codeEditor.h \
     codeEditor/highlighter.h \
     codeEditor/miniMapC.h \
-    codeEditor/searchWidget.h
+    codeEditor/searchWidget.h \
+    projectItem.h \
+    projectAction.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \

@@ -38,7 +38,7 @@ void catchMessage(QtMsgType type, const QMessageLogContext &, const QString &msg
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    kernelSize(3),
+    mKernelSize(3),
     mStatusLabel(new QLabel),
     mSearchWidget(new SearchWidget(0, this)),
     mSearchWidgetAdded(false)
@@ -70,15 +70,23 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
-    ncams = this->getCamCount();
-    debug(QString::number(ncams) + " camera(s) detected.");
+    mNcams = this->getCamCount();
+    debug(QString::number(mNcams) + " camera(s) detected.");
 
     QMenu *devicesMenu = new QMenu();
-    for (int i = 0; i < ncams; ++i) {
-        QAction *testAction = new QAction("Camera: " + QString::number(i), this);
+    for (int i = 0; i < mNcams; ++i) {
+        ProjectAction *testAction = new ProjectAction(QString::number(i), this);
+        testAction->setIndex(i);
         devicesMenu->addAction(testAction);
         ui->menuDevices->addAction(testAction);
     }
+    
+    connect(devicesMenu, SIGNAL(triggered(QAction*)), 
+            this, SLOT(getCam(QAction*)));
+    
+    connect(ui->menuDevices, SIGNAL(triggered(QAction*)), 
+            this, SLOT(getCam(QAction*)));
+    
     //QAction *testAction = new QAction("test item", this);
     //QAction *testAction1 = new QAction("another test item", this);
     //devicesMenu->addAction(testAction);
@@ -104,12 +112,12 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(load()));
 
-    thresholdDiablog = new ColorThresholdDialog(this);
-    histogramDialog = new HistogramDialog(this);
-    outlineDialog = new OutlineDialog(this);
-    squaresDialog = new SquareDialog(this);
+    mThresholdDiablog = new ColorThresholdDialog(this);
+    mHistogramDialog = new HistogramDialog(this);
+    mOutlineDialog = new OutlineDialog(this);
+    mSquaresDialog = new SquareDialog(this);
 
-    connect(thresholdDiablog, SIGNAL(updateMainWindowTreshold()), this, SLOT(updateThreshold()));
+    connect(mThresholdDiablog, SIGNAL(updateMainWindowTreshold()), this, SLOT(updateThreshold()));
     connect(ui->actionToolbar, SIGNAL(triggered()), this, SLOT(showToolbarClicked()));
     ui->actionToolbar->setChecked(true);
 
@@ -140,14 +148,20 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusLabel->setText("");
     ui->statusBar->addWidget(mStatusLabel);
     
+    ui->commands->setAttribute(Qt::WA_MacShowFocusRect, false);
+    
     //setWindowTitle("SublimeCV");
-    setWindowTitle("Fred 0.0.1");
+    //setWindowTitle("Fred 0.0.1");
 
-    timerTime = 16;
+    mTimerTime = 16;
+    
+    setCamera(2, 640, 480);
+    
+    mCamera2.open(1);
+    mCamera2.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+    mCamera2.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
 
-    camera.open(0);
-
-    if (camera.isOpened() == false) {
+    if (mCamera.isOpened() == false) {
         ui->console->setTextColor(mRed);
         ui->console->append("Error: camera not accessed successfully.");
         ui->console->setTextColor(mBlack);
@@ -157,9 +171,11 @@ MainWindow::MainWindow(QWidget *parent) :
     Command<MainWindow> c("Find Circle", *this, &MainWindow::doCircles);
     addCommand(c);
 
-    timer = new QTimer(this);
-    connect(timer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
+    mTimer = new QTimer(this);
+    connect(mTimer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
     //timer->start(timerTime);
+    
+    //ui->tabs->addTab(ui->originalImage, "a new tab");
 }
 
 MainWindow::~MainWindow() {
@@ -190,23 +206,44 @@ void MainWindow::fail(const QString &msg) {
     ui->console->setTextColor(Qt::white);
 }
 
-QTreeWidgetItem *MainWindow::addRoot(QString name) {
-    QTreeWidgetItem *itm = new QTreeWidgetItem(ui->commands);
+ProjectItem *MainWindow::addRoot(QString name, ProjectItem::Type type) {
+    ProjectItem *itm = new ProjectItem(ui->commands);
     itm->setText(0, name);
+    itm->setType(type);
 
     return itm;
 }
 
-void MainWindow::addChild(QTreeWidgetItem *parent, QString name, QIcon &icon) {
-    QTreeWidgetItem *itm = new QTreeWidgetItem();
+void MainWindow::addChild(ProjectItem *parent, ProjectItem::Type type, QString path, QString name, QIcon &icon) {
+    ProjectItem *itm = new ProjectItem();
     itm->setText(0, name);
     itm->setIcon(0, icon);
-    itm->setData(0, 32, QVariant(name));
+    itm->setType(type);
+    itm->setPath(path);
     parent->addChild(itm);
+    //TODO: check preferences
+    parent->sortChildren(0, Qt::AscendingOrder);
 }
 
-void MainWindow::addChild(QTreeWidgetItem *parent, QTreeWidgetItem *child) {
+void MainWindow::addChild(ProjectItem *parent, ProjectItem *child) {
     parent->addChild(child);
+}
+
+void MainWindow::setCamera(int c, int w, int h) {
+    if (mCamera.isOpened())
+        mCamera.release();
+    
+    mCamera.open(c);
+    mCamera.set(CV_CAP_PROP_FRAME_WIDTH, w);
+    mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, h);
+    
+    debug("set");
+}
+
+void MainWindow::getCam(QAction *c) {
+    
+    int n = c->text().toInt();
+    setCamera(n, 640, 480);
 }
 
 void MainWindow::setUpCommandDock() {
@@ -217,15 +254,15 @@ void MainWindow::setUpCommands() {
     ui->commands->setColumnCount(1);
     ui->commands->setHeaderLabel("Commands");
     
-    root = addRoot("Running Commands");
-    root->setData(0, Qt::UserRole, ROOT);
-    root->setExpanded(true);
+    mRoot = addRoot("Running Commands", ProjectItem::CommandRoot);
+    mRoot->setData(0, Qt::UserRole, ROOT);
+    mRoot->setExpanded(true);
 
-    QTreeWidgetItem *drawOriginalImageItem = new QTreeWidgetItem();
+    ProjectItem *drawOriginalImageItem = new ProjectItem();
     drawOriginalImageItem->setText(0, "Draw original image");
     drawOriginalImageItem->setData(0, Qt::UserRole, ORIGINAL);
 
-    addChild(root, drawOriginalImageItem);
+    addChild(mRoot, drawOriginalImageItem);
 
     ui->commands->setContextMenuPolicy(Qt::CustomContextMenu);
 
@@ -382,8 +419,8 @@ void MainWindow::save() {
 
     QDataStream out(&file);
     out.setVersion(QDataStream::Qt_5_0);
-    out << thresholdDiablog->rMin << thresholdDiablog->gMin << thresholdDiablog->bMin << thresholdDiablog->rMax
-        << thresholdDiablog->gMax << thresholdDiablog->bMax << timerTime;
+    out << mThresholdDiablog->rMin << mThresholdDiablog->gMin << mThresholdDiablog->bMin << mThresholdDiablog->rMax
+        << mThresholdDiablog->gMax << mThresholdDiablog->bMax << mTimerTime;
 
     file.flush();
     file.close();
@@ -407,19 +444,20 @@ void MainWindow::load() {
 
     QDataStream in(&file);
     in.setVersion(QDataStream::Qt_5_0);
-    in >> thresholdDiablog->rMin >> thresholdDiablog->gMin >> thresholdDiablog->bMin >> thresholdDiablog->rMax
-        >> thresholdDiablog->gMax >> thresholdDiablog->bMax >> timerTime;
+    in >> mThresholdDiablog->rMin >> mThresholdDiablog->gMin >> mThresholdDiablog->bMin >> mThresholdDiablog->rMax
+        >> mThresholdDiablog->gMax >> mThresholdDiablog->bMax >> mTimerTime;
 
-    thresholdDiablog->updateSliders();
+    mThresholdDiablog->updateSliders();
     updateThreshold();
 
     file.close();
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
-    camera.read(matOriginal);
+    mCamera.read(mMatOriginal);
+    mCamera2.read(mMatOriginal2);
 
-    if (matOriginal.empty()) {
+    if (mMatOriginal.empty()) {
         ui->console->setTextColor(mRed);
         ui->console->append("Error: camera not working!");
         ui->console->setTextColor(mBlack);
@@ -427,7 +465,7 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
 
     //histogram
-    histogramDialog->updatHistogram(matOriginal);
+    //mHistogramDialog->updatHistogram(mMatOriginal);
 
     int size = mCommandList.size();
     for (int i = 0; i < size; ++i) {
@@ -437,10 +475,10 @@ void MainWindow::processFrameAndUpdateGUI() {
         }
     }
     
-    //doOutline();
+    doOutline();
 
-    //squaresDialog->findSquares(matOriginal, squares);
-    //squaresDialog->drawSquares(matOriginal, squares);
+    //mSquaresDialog->findSquares(mMatProcessed, mSquares);
+    //mSquaresDialog->drawSquares(mMatOriginal, mSquares);
 
     //0, 120, 0     170, 256, 40 for the green thing
     /*
@@ -461,52 +499,55 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
     */
     //convert and display
-    cv::cvtColor(matOriginal, matOriginal, CV_BGR2RGB);
+    cv::cvtColor(mMatOriginal, mMatOriginal, CV_BGR2RGB);
+    cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
 
-    QImage qimgOriginal((uchar*)matOriginal.data, matOriginal.cols, matOriginal.rows, matOriginal.step, QImage::Format_RGB888);
-    QImage qimgProcessed((uchar*)matProcessed.data, matProcessed.cols, matProcessed.rows, matProcessed.step, QImage::Format_Indexed8);
-    //QImage qimgOutline((uchar*)matOutline.data, matOutline.cols, matOutline.rows, matOutline.step, QImage::Format_Indexed8);
-    QImage qimgOutline2((uchar*)matDetectedEdges.data, matDetectedEdges.cols, matDetectedEdges.rows, matDetectedEdges.step, QImage::Format_Indexed8);
+    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
+    QImage qimgProcessed((uchar*)mMatProcessed.data, mMatProcessed.cols, mMatProcessed.rows, mMatProcessed.step, QImage::Format_Indexed8);
+    //QImage qimgOutline((uchar*)mMatOutline.data, mMatOutline.cols, mMatOutline.rows, mMatOutline.step, QImage::Format_Indexed8);
+    QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
 
-    outlineDialog->setLabelPixmap(qimgOutline2);
+    QImage qimgOriginal2((uchar*)mMatOriginal2.data, mMatOriginal2.cols, mMatOriginal2.rows, mMatOriginal2.step, QImage::Format_RGB888);
+    
+    mOutlineDialog->setLabelPixmap(qimgOutline2);
 
     ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
-    ui->processedImage->setPixmap(QPixmap::fromImage(qimgProcessed));
+    ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal2));
 }
 
 void MainWindow::doCircles() {
     //0, 120, 0     170, 256, 40 for the green thing
-    cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
-    cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
-    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 1, matProcessed.rows / 4, 100, 50, 10, 400);
+    cv::inRange(mMatOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), mMatProcessed);
+    cv::GaussianBlur(mMatProcessed, mMatProcessed, cv::Size(9, 9), 1.5);
+    cv::HoughCircles(mMatProcessed, mVecCircles, CV_HOUGH_GRADIENT, 1, mMatProcessed.rows / 4, 100, 50, 10, 400);
 
-    for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
+    for (mItrCircles = mVecCircles.begin(); mItrCircles != mVecCircles.end(); mItrCircles++) {
         ui->console->setTextColor(mGreen);
-        ui->console->append("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
-                ", y =" + QString::number((*itrCircles)[1]).rightJustified(4, ' ') +
-                ", radius =" + QString::number((*itrCircles)[2], 'f', 3).rightJustified(7, ' '));
+        ui->console->append("pos x =" + QString::number((*mItrCircles)[0]).rightJustified(4, ' ') +
+                ", y =" + QString::number((*mItrCircles)[1]).rightJustified(4, ' ') +
+                ", radius =" + QString::number((*mItrCircles)[2], 'f', 3).rightJustified(7, ' '));
 
-        ui->console->setTextColor(mBlack);
+        //ui->console->setTextColor(mBlack);
 
-        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
-        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
+        cv::circle(mMatOriginal, cv::Point((int)(*mItrCircles)[0], (int)(*mItrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
+        cv::circle(mMatOriginal, cv::Point((int)(*mItrCircles)[0], (int)(*mItrCircles)[1]), (int)(*mItrCircles)[2], cv::Scalar(0, 0, 255), 3);
     }
 }
 
 void MainWindow::doOutline() {
     //outline
-    matOutline.create(matOriginal.size(), matOriginal.type());
+    mMatOutline.create(mMatOriginal.size(), mMatOriginal.type());
 
-    cv::cvtColor(matOriginal, matGray, CV_BGR2GRAY);
+    cv::cvtColor(mMatOriginal, mMatGray, CV_BGR2GRAY);
 
-    cv::blur(matGray, matDetectedEdges, cv::Size(kernelSize, kernelSize));
+    cv::blur(mMatGray, mMatDetectedEdges, cv::Size(mKernelSize, mKernelSize));
 
-    cv::Canny(matDetectedEdges, matDetectedEdges, outlineDialog->getSliderValue(), outlineDialog->getSliderValue() * 3, kernelSize);
+    cv::Canny(mMatDetectedEdges, mMatDetectedEdges, mOutlineDialog->getSliderValue(), mOutlineDialog->getSliderValue() * 3, mKernelSize);
 
     //matOutline = cv::Scalar::all(0);
 
     //matOriginal.copyTo(matOutline, matDetectedEdges);
-    matDetectedEdges.copyTo(matOutline, matDetectedEdges);
+    mMatDetectedEdges.copyTo(mMatOutline, mMatDetectedEdges);
 }
 
 void MainWindow::updateStatusLabel(const QString &text) {
@@ -515,14 +556,14 @@ void MainWindow::updateStatusLabel(const QString &text) {
 
 void MainWindow::pauseButtonClicked() {
     if (!ui->actionStart->isEnabled()) {
-        timer->stop();
+        mTimer->stop();
 
         ui->actionPause->setDisabled(true);
         ui->actionStart->setEnabled(true);
 
         debug("Pausing");
     } else {
-        timer->start(timerTime);
+        mTimer->start(mTimerTime);
 
         ui->actionPause->setDisabled(false);
         ui->actionStart->setEnabled(false);
@@ -533,33 +574,33 @@ void MainWindow::pauseButtonClicked() {
 }
 
 void MainWindow::thresholdClicked() {
-    if (!thresholdDiablog) {
-        thresholdDiablog = new ColorThresholdDialog(this);
+    if (!mThresholdDiablog) {
+        mThresholdDiablog = new ColorThresholdDialog(this);
     }
 
-    if (thresholdDiablog->isHidden() == false) {
+    if (mThresholdDiablog->isHidden() == false) {
         //ui->thresholdDock->setHidden(false);
-        thresholdDiablog->close();
+        mThresholdDiablog->close();
 
-        this->rMin = thresholdDiablog->rMin;
-        this->gMin = thresholdDiablog->gMin;
-        this->bMin = thresholdDiablog->bMin;
-        this->rMax = thresholdDiablog->rMax;
-        this->gMax = thresholdDiablog->gMax;
-        this->bMax = thresholdDiablog->bMax;
+        this->rMin = mThresholdDiablog->rMin;
+        this->gMin = mThresholdDiablog->gMin;
+        this->bMin = mThresholdDiablog->bMin;
+        this->rMax = mThresholdDiablog->rMax;
+        this->gMax = mThresholdDiablog->gMax;
+        this->bMax = mThresholdDiablog->bMax;
     } else {
         //ui->thresholdDock->setHidden(true);
-        thresholdDiablog->show();
+        mThresholdDiablog->show();
     }
 }
 
 void MainWindow::updateThreshold() {
-    this->rMin = thresholdDiablog->rMin;
-    this->gMin = thresholdDiablog->gMin;
-    this->bMin = thresholdDiablog->bMin;
-    this->rMax = thresholdDiablog->rMax;
-    this->gMax = thresholdDiablog->gMax;
-    this->bMax = thresholdDiablog->bMax;
+    this->rMin = mThresholdDiablog->rMin;
+    this->gMin = mThresholdDiablog->gMin;
+    this->bMin = mThresholdDiablog->bMin;
+    this->rMax = mThresholdDiablog->rMax;
+    this->gMax = mThresholdDiablog->gMax;
+    this->bMax = mThresholdDiablog->bMax;
 
     if (ui->actionThreshold->isChecked()) {
         ui->actionThreshold->setChecked(false);
@@ -567,7 +608,7 @@ void MainWindow::updateThreshold() {
 }
 
 void MainWindow::hideThreshold() {
-    thresholdDiablog->close();
+    mThresholdDiablog->close();
     ui->actionThreshold->setChecked(false);
 }
 
@@ -594,26 +635,26 @@ void MainWindow::showToolbarClicked() {
 }
 
 void MainWindow::showHistogramClicked() {
-    if (histogramDialog->isHidden()) {
-        histogramDialog->show();
+    if (mHistogramDialog->isHidden()) {
+        mHistogramDialog->show();
     } else {
-        histogramDialog->hide();
+        mHistogramDialog->hide();
     }
 }
 
 void MainWindow::showOutlineClicked() {
-    if (outlineDialog->isHidden()) {
-        outlineDialog->show();
+    if (mOutlineDialog->isHidden()) {
+        mOutlineDialog->show();
     } else {
-        outlineDialog->hide();
+        mOutlineDialog->hide();
     }
 }
 
 void MainWindow::showSquaresClicked() {
-    if (squaresDialog->isHidden()) {
-        squaresDialog->show();
+    if (mSquaresDialog->isHidden()) {
+        mSquaresDialog->show();
     } else {
-        squaresDialog->hide();
+        mSquaresDialog->hide();
     }
 }
 
@@ -631,11 +672,11 @@ void MainWindow::addCommand(Command<MainWindow> c) {
     
     mCommandList.append(c);
     
-    QTreeWidgetItem *itm = new QTreeWidgetItem();
+    ProjectItem *itm = new ProjectItem();
     itm->setText(0, c.getName());
     itm->setData(0, Qt::UserRole, ORIGINAL);
 
-    addChild(root, itm);
+    addChild(mRoot, itm);
 }
 
 

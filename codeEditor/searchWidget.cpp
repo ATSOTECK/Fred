@@ -16,6 +16,7 @@ LineEditCount::LineEditCount(LineEdit *edit) //:
     layout->addWidget(mCounter);
     edit->setStyleSheet("padding-right: 2px;");
     edit->setTextMargins(0, 0, 60, 0);
+    edit->setAttribute(Qt::WA_MacShowFocusRect, false);
 }
 
 void LineEditCount::updateCount(int index, int total, bool hasSearch) {
