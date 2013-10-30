@@ -155,11 +155,17 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mTimerTime = 16;
     
-    setCamera(2, 640, 480);
+    if (mNcams == 3) {
+        setCamera(2, 640, 480);
+    } else {
+        setCamera(0, 640, 480);
+    }
     
-    mCamera2.open(1);
-    mCamera2.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-    mCamera2.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    if (mNcams > 1) {
+        mCamera2.open(1);
+        mCamera2.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+        mCamera2.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    }
 
     if (mCamera.isOpened() == false) {
         ui->console->setTextColor(mRed);
@@ -455,7 +461,10 @@ void MainWindow::load() {
 
 void MainWindow::processFrameAndUpdateGUI() {
     mCamera.read(mMatOriginal);
-    mCamera2.read(mMatOriginal2);
+    
+    if (mNcams > 1) {
+        mCamera2.read(mMatOriginal2);
+    }
 
     if (mMatOriginal.empty()) {
         ui->console->setTextColor(mRed);
@@ -466,7 +475,7 @@ void MainWindow::processFrameAndUpdateGUI() {
 
     //histogram
     //mHistogramDialog->updatHistogram(mMatOriginal);
-
+    /*
     int size = mCommandList.size();
     for (int i = 0; i < size; ++i) {
         Command<MainWindow> c = mCommandList.at(i);
@@ -474,6 +483,7 @@ void MainWindow::processFrameAndUpdateGUI() {
             c.update();
         }
     }
+    */
     
     doOutline();
 
@@ -500,19 +510,24 @@ void MainWindow::processFrameAndUpdateGUI() {
     */
     //convert and display
     cv::cvtColor(mMatOriginal, mMatOriginal, CV_BGR2RGB);
-    cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
+    if (mNcams > 1) {
+        cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
+    }
 
     QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
     QImage qimgProcessed((uchar*)mMatProcessed.data, mMatProcessed.cols, mMatProcessed.rows, mMatProcessed.step, QImage::Format_Indexed8);
     //QImage qimgOutline((uchar*)mMatOutline.data, mMatOutline.cols, mMatOutline.rows, mMatOutline.step, QImage::Format_Indexed8);
     QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
-
-    QImage qimgOriginal2((uchar*)mMatOriginal2.data, mMatOriginal2.cols, mMatOriginal2.rows, mMatOriginal2.step, QImage::Format_RGB888);
     
     mOutlineDialog->setLabelPixmap(qimgOutline2);
 
     ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
-    ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal2));
+    if (mNcams >1) {
+        QImage qimgOriginal2((uchar*)mMatOriginal2.data, mMatOriginal2.cols, mMatOriginal2.rows, mMatOriginal2.step, QImage::Format_RGB888);
+        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal2));
+    } else {
+        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal));
+    }
 }
 
 void MainWindow::doCircles() {
