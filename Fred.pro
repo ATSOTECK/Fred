@@ -8,7 +8,7 @@ QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = Blinkenlights
+TARGET = Fred
 TEMPLATE = app
 
 DESTDIR = ../bin
@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     codeEditor/miniMapC.cpp \
     codeEditor/searchWidget.cpp \
     projectItem.cpp \
-    projectAction.cpp
+    projectAction.cpp \
+    cameraDialog.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
@@ -45,18 +46,32 @@ HEADERS  += mainwindow.h \
     codeEditor/miniMapC.h \
     codeEditor/searchWidget.h \
     projectItem.h \
-    projectAction.h
+    projectAction.h \
+    cameraDialog.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
     histogramdialog.ui \
     outlinedialog.ui \
     squaredialog.ui \
-    aboutdialog.ui
+    aboutdialog.ui \
+    cameraDialog.ui
 
 RESOURCES += \
     res.qrc
 
 DEPENDPATH += .
-INCLUDEPATH += /opt/local/include
-LIBS += -L/opt/local/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc
+
+macx {
+    INCLUDEPATH += /opt/local/include
+    LIBS += -L/opt/local/lib/ -lopencv_core -lopencv_highgui -lopencv_imgproc
+}
+
+win32 {
+    INCLUDEPATH += C:\\opencv\\build\\include
+    LIBS += -LC:\\opencv\\build\\x86\\vc10\\lib \
+        -lopencv_core246 \
+        -lopencv_highgui246 \
+        -lopencv_imgproc246 \
+        -static-libgcc
+}

@@ -3,6 +3,7 @@
 
 #include "codeEditor/codeEditor.h"
 #include "codeEditor/searchWidget.h"
+#include "cameraDialog.h"
 
 #include <QtCore>
 #include <QStringListModel>
@@ -53,6 +54,8 @@ MainWindow::MainWindow(QWidget *parent) :
     setCorner(Qt::BottomRightCorner, Qt::RightDockWidgetArea);
     setCorner(Qt::TopLeftCorner, Qt::LeftDockWidgetArea);
     setCorner(Qt::TopRightCorner, Qt::RightDockWidgetArea);
+    
+    setDockNestingEnabled(true);
 
     mBlack = QColor("black");
     mBlue = QColor("blue");
@@ -62,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->console->setReadOnly(true);
     ui->consoleDockWidgetContents->setContentsMargins(0, 0, 0, 0);
     ui->commandsDockWidgetContents->setContentsMargins(0, 0, 0, 0);
+    ui->commands->setAnimated(true);
     
     debug("Starting...");
     QString version = CV_VERSION;
@@ -149,9 +153,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusBar->addWidget(mStatusLabel);
     
     ui->commands->setAttribute(Qt::WA_MacShowFocusRect, false);
-    
-    //setWindowTitle("SublimeCV");
-    //setWindowTitle("Fred 0.0.1");
 
     mTimerTime = 16;
     
@@ -182,6 +183,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //timer->start(timerTime);
     
     //ui->tabs->addTab(ui->originalImage, "a new tab");
+    
+    ui->originalImage->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(ui->originalImage, SIGNAL(customContextMenuRequested(QPoint)),
+            this, SLOT(getCamOneContextMenu(QPoint)));
 }
 
 MainWindow::~MainWindow() {
@@ -243,13 +248,28 @@ void MainWindow::setCamera(int c, int w, int h) {
     mCamera.set(CV_CAP_PROP_FRAME_WIDTH, w);
     mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, h);
     
-    debug("set");
+    debug("Camera set successful!");
 }
 
 void MainWindow::getCam(QAction *c) {
-    
     int n = c->text().toInt();
     setCamera(n, 640, 480);
+}
+
+void MainWindow::addCameraDialog(QAction *c) {
+    debug("pop");
+    
+    if (c->text() != "Pop") {
+        return;
+    }
+    
+    debug("pop");
+    
+    CameraDialog *dialog = new CameraDialog(this);
+    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
+    dialog->setLabelPixmap(qimgOriginal);
+    
+    dialog->exec();
 }
 
 void MainWindow::setUpCommandDock() {
@@ -333,6 +353,26 @@ void MainWindow::getContextMenu(const QPoint &point) {
     default:
         break;
     }
+}
+
+void MainWindow::getCamOneContextMenu(const QPoint &point) {
+    mCameraMenu = new QMenu(ui->originalImage);
+    QAction *action = new QAction("1", 0);
+    QAction *action2 = new QAction("2", 0);
+    QAction *action3 = new QAction("3", 0);
+    
+    QAction *popOutAction = new QAction("Pop", mCameraMenu);
+    
+    mCameraMenu->addAction(action);
+    mCameraMenu->addAction(action2);
+    mCameraMenu->addAction(action3);
+    mCameraMenu->addSeparator();
+    mCameraMenu->addAction(popOutAction);
+    mCameraMenu->exec(ui->originalImage->mapToGlobal(point));
+    
+    connect(mCameraMenu, SIGNAL(triggered(QAction*)),
+            this, SLOT(addCameraDialog(QAction*)));
+    
 }
 
 CodeEditor *MainWindow::addCodeEditor() {
@@ -628,6 +668,7 @@ void MainWindow::hideThreshold() {
 }
 
 void MainWindow::clearConsoleClicked() {
+    ui->console->setText("");
     debug("Clear console");
 }
 
@@ -693,26 +734,3 @@ void MainWindow::addCommand(Command<MainWindow> c) {
 
     addChild(mRoot, itm);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

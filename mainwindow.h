@@ -68,6 +68,7 @@ public slots:
     void closeFind();
     
     void getCam(QAction *c);
+    void addCameraDialog(QAction *c);
     
 private slots:
     void pauseButtonClicked();
@@ -87,6 +88,8 @@ private slots:
     void getContextMenu(const QPoint &point);
     
     void hideConsole();
+    
+    void getCamOneContextMenu(const QPoint &point);
 
 private:
     ProjectItem *addRoot(QString name, ProjectItem::Type type);
@@ -154,6 +157,8 @@ private:
     
     SearchWidget *mSearchWidget;
     bool mSearchWidgetAdded;
+    
+    QMenu *mCameraMenu;
 };
 
 void setMainWindow(MainWindow *mw);
