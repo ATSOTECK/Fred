@@ -1282,6 +1282,12 @@ void CodeEditor::setUseWordWrap(bool wrap) {
     }
 }
 
+#ifdef Q_OS_WIN
+int CodeEditor::round(float x) {
+    return ((int)(x - 0.5)) + 1;
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void LineNumberArea::mousePressEvent(QMouseEvent *e) {

@@ -73,6 +73,10 @@ public:
     }
     
     bool insideComment(int lineNumber);
+    
+#ifdef Q_OS_WIN
+    int round(float x);
+#endif
 
 public slots:
     void findText();

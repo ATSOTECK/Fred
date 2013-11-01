@@ -81,12 +81,12 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 0; i < mNcams; ++i) {
         ProjectAction *testAction = new ProjectAction(QString::number(i), this);
         testAction->setIndex(i);
-        devicesMenu->addAction(testAction);
+        //devicesMenu->addAction(testAction);
         ui->menuDevices->addAction(testAction);
     }
     
-    connect(devicesMenu, SIGNAL(triggered(QAction*)), 
-            this, SLOT(getCam(QAction*)));
+    //connect(devicesMenu, SIGNAL(triggered(QAction*)), 
+            //this, SLOT(getCam(QAction*)));
     
     connect(ui->menuDevices, SIGNAL(triggered(QAction*)), 
             this, SLOT(getCam(QAction*)));
@@ -101,7 +101,7 @@ MainWindow::MainWindow(QWidget *parent) :
     devicesButton->setMenu(devicesMenu);
     devicesButton->setPopupMode(QToolButton::InstantPopup);
     devicesButton->setToolTip("Available devices");
-    ui->mainToolBar->addWidget(devicesButton);
+    //ui->mainToolBar->addWidget(devicesButton);
     
     connect(ui->actionPause, SIGNAL(triggered()), this, SLOT(pauseButtonClicked()));
     connect(ui->actionStart, SIGNAL(triggered()), this, SLOT(pauseButtonClicked()));
@@ -316,6 +316,22 @@ void MainWindow::setUpActions() {
     connect(ui->actionFind, SIGNAL(triggered()), this, SLOT(find()));
 }
 
+#ifdef Q_OS_WIN
+int MainWindow::getCamCount() {
+    CvCapture *cap;
+    int ncams = 0;
+    while (ncams < 6) {
+        cap = cvCreateCameraCapture(ncams++);
+        if (cap == NULL)
+            break;
+        cvReleaseCapture(&cap);
+    }
+
+    cvReleaseCapture(&cap);
+    return (ncams - 1);
+}
+#endif
+
 int MainWindow::getCamCount() {
     CvCapture *cap;
     int ncams = 0;
@@ -395,7 +411,7 @@ CodeEditor *MainWindow::addCodeEditor() {
 #endif
     codeEditor->setFont(font);
     codeEditor->appendPlainText("--main.lua\n");
-    codeEditor->appendPlainText("function update()\n    if not paused() then\n        showOriginalImage(0)\n    end\nend");
+    codeEditor->appendPlainText("function update()\n\tif not paused() then\n\t\tshowOriginalImage(0)\n\tend\nend");
     highlighter = new Highlighter(codeEditor->document());
     completer = new QCompleter();
     completer->setModel(modelFromFile(completer, ":/wordlist.txt"));
@@ -724,7 +740,7 @@ void MainWindow::newCommandClicked() {
 }
 
 void MainWindow::addCommand(Command<MainWindow> c) {
-    Q_ASSERT(c);
+    //Q_ASSERT(c);
     
     mCommandList.append(c);
     
