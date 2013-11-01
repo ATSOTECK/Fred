@@ -19,6 +19,7 @@ class QSize;
 class QWidget;
 class QCompleter;
 class QTimer;
+class QUndoStack;
 
 class LineNumberArea;
 class Highlighter;
@@ -66,6 +67,12 @@ public:
     void lineNumberAreaWheelEvent(QWheelEvent *e);
     
     void findMatch(QString text, bool next = false, bool caseSensitive = false, bool wholeWord = false, int foo = 5);
+    
+    QUndoStack *undoStack() {
+        return mUndoStack;
+    }
+    
+    bool insideComment(int lineNumber);
 
 public slots:
     void findText();
@@ -85,9 +92,11 @@ protected:
     void keyPressEvent(QKeyEvent *e);
     void focusInEvent(QFocusEvent *e);
     
+    void mouseMoveEvent(QMouseEvent *e);
+    void mousePressEvent(QMouseEvent *e);
     void mouseReleaseEvent(QMouseEvent *e);
     
-    //void paintEvent(QPaintEvent *e);
+    void paintEvent(QPaintEvent *e);
 
 private slots:
     void updateLineNumberAreaWidth(int newBlockCount);
@@ -98,9 +107,11 @@ private slots:
     void insertCompletion(const QString &completion);
     void blockOrColumnChanged();
     void updateCorner();
+    void highlightJumpToDefinition(QTextCursor &cursor, bool pressed);
     
 signals:
     void statusInfoChanged(QString info);
+    void locateFunction(QString text, bool);
 
 private:
     friend class LineNumberArea;
@@ -111,8 +122,13 @@ private:
     void indentMore();
     void autoCompleteEnter();
     bool checkNextLine(QString &txt);
+    void autoCompleteBackspace();
+    bool isInBPB(); //BPB Brace, Paran, Braket
     void setUpMiniMap();
     void tearDownMiniMap();
+    void buildVarTable();
+    
+    void gotoDefinition(QTextCursor *cursor = 0);
     
     QString getIndentation(const QString &text);
     
@@ -120,31 +136,39 @@ private:
     
     void wheelEvent(QWheelEvent *e);
 
-    QWidget *lineNumberArea;
+    QWidget *mLineNumberArea;
 
     QString textUnderCursor() const;
-    QString textLeftOfCursor() const;
-    QString textRightOfCursor() const;
+    QString textLeftOfCursor(QTextCursor cur, bool start = false) const;
+    QString textRightOfCursor(QTextCursor cur, bool end  = false) const;
+    QString textLeftOfCursor(bool start = false) const;
+    QString textRightOfCursor(bool end  = false) const;
 
     QCompleter *c;
 
     QString mName;
 
-    QPixmap rightArrowIcon;
-    QPixmap downArrowIcon;
+    QPixmap mRightArrowIcon;
+    QPixmap mDownArrowIcon;
 
-    Highlighter *highlighter;
+    Highlighter *mHighlighter;
     MiniMapC *mMiniMap;
 
     QTimer *mTimer;
     
     QString mSelectedText;
     
-    bool set;
+    bool mSet;
     bool mIsModified;
     bool mUseTabs;
     
-    QWidget *corner;
+    QUndoStack *mUndoStack;
+    
+    QList<QString> mVarTable;
+    QList<QTextEdit::ExtraSelection> mExtraSelections;
+    bool mInitialSelectionAdded;
+    
+    QWidget *mCornerWidget;
 };
 
 class LineNumberArea : public QWidget {
@@ -158,11 +182,11 @@ public:
     }
     
     void codeFoldingEvent(int lineNumber);
-    void fold(int lineNumber);
-    void unfold(int lineNumber);
+    void fold(int lineNumber, bool comment = false);
+    void unfold(int lineNumber, bool comment = false);
     void isFolded(int lineNumber);
     
-    int findClosing(QTextBlock block);
+    int findClosing(QTextBlock block, bool comment = false);
 
 protected:
     void paintEvent(QPaintEvent *event) {

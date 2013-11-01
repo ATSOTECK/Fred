@@ -16,7 +16,6 @@ LineEditCount::LineEditCount(LineEdit *edit) //:
     layout->addWidget(mCounter);
     edit->setStyleSheet("padding-right: 2px;");
     edit->setTextMargins(0, 0, 60, 0);
-    edit->setAttribute(Qt::WA_MacShowFocusRect, false);
 }
 
 void LineEditCount::updateCount(int index, int total, bool hasSearch) {
@@ -35,6 +34,7 @@ LineEdit::LineEdit(SearchWidget *parent) :
     mParent(parent)
 {
     mCounter = new LineEditCount(this);
+    setAttribute(Qt::WA_MacShowFocusRect, false);
 }
 
 void LineEdit::keyPressEvent(QKeyEvent *e) {
@@ -78,7 +78,7 @@ SearchWidget::SearchWidget(CodeEditor *editor, QWidget *parent) :
     mFindText = new LineEdit(this);
     mFindText->setMinimumWidth(250);
     mFindText->setPlaceholderText(" Find");
-    QIcon closeIcon = QIcon(":/Images/close.png");
+    QIcon closeIcon = QIcon(":/Images/16x16/close.png");
     //QIcon findIcon = QIcon(":/Images/32x32/find.png");
     mButtonClose = new QPushButton(closeIcon, "", this);
     mButtonClose->setToolTip(tr("Close"));
