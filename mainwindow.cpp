@@ -332,6 +332,7 @@ int MainWindow::getCamCount() {
 }
 #endif
 
+#ifdef Q_OS_MACX
 int MainWindow::getCamCount() {
     CvCapture *cap;
     int ncams = 0;
@@ -345,6 +346,7 @@ int MainWindow::getCamCount() {
     cvReleaseCapture(&cap);
     return (ncams - 1);
 }
+#endif
 
 void MainWindow::getContextMenu(const QPoint &point) {
     QTreeWidgetItem *itm = ui->commands->itemAt(point);
