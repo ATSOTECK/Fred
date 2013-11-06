@@ -257,13 +257,9 @@ void MainWindow::getCam(QAction *c) {
 }
 
 void MainWindow::addCameraDialog(QAction *c) {
-    debug("pop");
-    
     if (c->text() != "Pop") {
         return;
     }
-    
-    debug("pop");
     
     CameraDialog *dialog = new CameraDialog(this);
     QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
@@ -386,10 +382,13 @@ void MainWindow::getCamOneContextMenu(const QPoint &point) {
     mCameraMenu->addAction(action3);
     mCameraMenu->addSeparator();
     mCameraMenu->addAction(popOutAction);
-    mCameraMenu->exec(ui->originalImage->mapToGlobal(point));
     
     connect(mCameraMenu, SIGNAL(triggered(QAction*)),
             this, SLOT(addCameraDialog(QAction*)));
+    
+    mCameraMenu->dumpObjectInfo();
+    
+    mCameraMenu->exec(ui->originalImage->mapToGlobal(point));
     
 }
 
