@@ -24,6 +24,7 @@
 #include "squaredialog.h"
 #include "projectItem.h"
 #include "projectAction.h"
+#include "camera.h"
 
 namespace Ui {
 class MainWindow;
@@ -81,7 +82,7 @@ private slots:
     void showSquaresClicked();
     void aboutDialogClicked();
     void newCommandClicked();
-
+    void refresh();
     void save();
     void load();
 
@@ -136,6 +137,8 @@ private:
     
     void addCommand(Command<MainWindow> c);
     QList<Command<MainWindow> > mCommandList;
+
+    QList<Camera> mCameras;
 
     QAction *mPauseAllCommandsAction;
     QAction *mResumeAllCommandsAction;

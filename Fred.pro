@@ -32,7 +32,8 @@ SOURCES += main.cpp\
     codeEditor/searchWidget.cpp \
     projectItem.cpp \
     projectAction.cpp \
-    cameraDialog.cpp
+    cameraDialog.cpp \
+    camera.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
@@ -47,7 +48,8 @@ HEADERS  += mainwindow.h \
     codeEditor/searchWidget.h \
     projectItem.h \
     projectAction.h \
-    cameraDialog.h
+    cameraDialog.h \
+    camera.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \

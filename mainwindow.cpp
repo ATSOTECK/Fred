@@ -74,7 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
-    mNcams = this->getCamCount();
+    mNcams = 1;// this->getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
 
     QMenu *devicesMenu = new QMenu();
@@ -90,6 +90,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(ui->menuDevices, SIGNAL(triggered(QAction*)), 
             this, SLOT(getCam(QAction*)));
+    connect(ui->actionRefresh,SIGNAL(triggered()),this,SLOT(refresh()));
     
     //QAction *testAction = new QAction("test item", this);
     //QAction *testAction1 = new QAction("another test item", this);
@@ -156,24 +157,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mTimerTime = 16;
     
-    if (mNcams == 3) {
-        setCamera(2, 640, 480);
-    } else {
-        setCamera(0, 640, 480);
-    }
-    
-    if (mNcams > 1) {
-        mCamera2.open(1);
-        mCamera2.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-        mCamera2.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+    for(int _x = 0; _x < mNcams; _x ++ ){
+        Camera  cam = Camera(_x);
+        mCameras.append( cam);
     }
 
-    if (mCamera.isOpened() == false) {
-        ui->console->setTextColor(mRed);
-        ui->console->append("Error: camera not accessed successfully.");
-        ui->console->setTextColor(mBlack);
-        return;
-    }
+
     
     Command<MainWindow> c("Find Circle", *this, &MainWindow::doCircles);
     addCommand(c);
@@ -290,6 +279,8 @@ void MainWindow::setUpCommands() {
 
     connect(ui->commands, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(getContextMenu(QPoint)));
 }
+
+
 
 void MainWindow::setUpActions() {
     mPauseAllCommandsAction = new QAction(tr("&Pause All Commands"), this);
@@ -517,18 +508,14 @@ void MainWindow::load() {
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
-    mCamera.read(mMatOriginal);
+    qDebug("Here!!!");
+    mMatOriginal = mCameras.first().render();
     
     if (mNcams > 1) {
-        mCamera2.read(mMatOriginal2);
+        Camera c =  mCameras.at(1);
+        mMatOriginal2 = c.render();
     }
 
-    if (mMatOriginal.empty()) {
-        ui->console->setTextColor(mRed);
-        ui->console->append("Error: camera not working!");
-        ui->console->setTextColor(mBlack);
-        return;
-    }
 
     //histogram
     //mHistogramDialog->updatHistogram(mMatOriginal);
@@ -585,6 +572,11 @@ void MainWindow::processFrameAndUpdateGUI() {
     } else {
         ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal));
     }
+}
+
+
+void MainWindow::refresh(){
+    this->mNcams = this->getCamCount();
 }
 
 void MainWindow::doCircles() {
