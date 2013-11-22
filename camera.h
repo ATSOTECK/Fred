@@ -18,6 +18,7 @@ public:
     ~Camera();
     
     bool open();
+    bool isOpen();
     bool close();
     cv::Mat render();
     void setSize(int x, int y);
