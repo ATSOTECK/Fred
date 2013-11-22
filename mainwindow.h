@@ -17,6 +17,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "aboutdialog.h"
+#include "cameraDialog.h"
 #include "colorthresholddialog.h"
 #include "command.h"
 #include "histogramdialog.h"
@@ -54,7 +55,7 @@ public:
     void crit(const QString &msg);
     void fail(const QString &msg);
     
-    void setCamera(int c, int w, int h);
+    void setCamera(int frame, int camId);
 
 public slots:
     void processFrameAndUpdateGUI();
@@ -130,6 +131,7 @@ private:
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
     int mTimerTime, mNcams, mKernelSize;
+    bool mPoped;
 
     std::vector<std::vector<cv::Point> > mSquares;
     
@@ -137,6 +139,8 @@ private:
     QList<Command<MainWindow> > mCommandList;
 
     QList<Camera*> mCameras;
+    Camera * mFrameOneCamera;
+    Camera * mFrameTwoCamera;
 
     QAction *mPauseAllCommandsAction;
     QAction *mResumeAllCommandsAction;
@@ -146,6 +150,7 @@ private:
     
     QAction *mHideConsoleAction;
 
+    CameraDialog *dialog;
     QColor mBlack;
     QColor mBlue;
     QColor mRed;

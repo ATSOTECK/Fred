@@ -44,7 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusLabel(new QLabel),
     mSearchWidget(new SearchWidget(0, this)),
     mSearchWidgetAdded(false),
-    mIsRunning(false)
+    mIsRunning(false),
+    mPoped(false)
 {
     ui->setupUi(this);
     
@@ -76,6 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
+    debug( "starting this");
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
     createCameras();
@@ -88,9 +90,9 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->menuDevices->addAction(testAction);
     }
     
-    //connect(devicesMenu, SIGNAL(triggered(QAction*)), 
+    //connect(devicesMenu, SIGNAL(triggered(QAction*)),
             //this, SLOT(getCam(QAction*)));
-    
+
     connect(ui->menuDevices, SIGNAL(triggered(QAction*)), 
             this, SLOT(getCam(QAction*)));
     connect(ui->actionRefresh,SIGNAL(triggered()),this,SLOT(refresh()));
@@ -225,33 +227,32 @@ void MainWindow::addChild(ProjectItem *parent, ProjectItem *child) {
     parent->addChild(child);
 }
 
-void MainWindow::setCamera(int c, int w, int h) {
-    /*
-    if (mCamera.isOpened())
-        mCamera.release();
-    
-    mCamera.open(c);
-    mCamera.set(CV_CAP_PROP_FRAME_WIDTH, w);
-    mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, h);
-    
-    debug("Camera set successful!");
-    */
+void MainWindow::setCamera(int frame, int camera) {
+    if (frame == 1){
+        mFrameOneCamera = mCameras.at(camera);
+    }
+    else{
+        mFrameTwoCamera = mCameras.at(camera);
+    }
 }
 
-void MainWindow::getCam(QAction *c) {
+void MainWindow::getCam(QAction *c) { // change cams here
+    std::cout << "in 'getCam'";
     int n = c->text().toInt();
-    setCamera(n, 640, 480);
+    setCamera(1,n);
 }
 
 void MainWindow::addCameraDialog(QAction *c) {
     if (c->text() != "Pop") {
+        int n = c->text().toInt();
+        setCamera(1,n-1);
         return;
     }
     
-    CameraDialog *dialog = new CameraDialog(this);
+    dialog = new CameraDialog(this);
     QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
     dialog->setLabelPixmap(qimgOriginal);
-    
+    mPoped = true;
     dialog->exec();
 }
 
@@ -303,17 +304,27 @@ void MainWindow::setUpActions() {
 
 #ifdef Q_OS_WIN
 int MainWindow::getCamCount() {
-    CvCapture *cap;
+    return 3;
+    cv::VideoCapture cap;
     int ncams = 0;
     while (ncams < 6) {
-        cap = cvCreateCameraCapture(ncams++);
-        if (cap == NULL)
-            break;
-        cvReleaseCapture(&cap);
+        cap.open(ncams);
+        cv::waitKey(100);
+        if (cap.isOpened()){
+            cv::Mat mat;
+            cap.read( mat);
+            if (mat.empty()){
+                 //break;
+            }
+            ncams++;
+        }else{break;}
+        cap.release();
     }
+    if(cap.isOpened())
+        cap.release();
 
-    cvReleaseCapture(&cap);
-    return (ncams - 1);
+    std::cout << "cams would be:" << ncams-1;
+    return (ncams);
 }
 #endif
 
@@ -337,20 +348,15 @@ int MainWindow::getCamCount() {
 int MainWindow::createCameras() {
     ///*
     for (int i = 0; i < mNcams; i++) {
-        std::cout << "here in createCameras " << i << std::endl;
         Camera *c = new Camera(i, this);
         mCameras.append(c);
     }
-    //*/
-    /*
-    Camera *c = new Camera(0, this);
-    mCameras.append(c);
-    Camera *c1 = new Camera(1, this);
-    mCameras.append(c1);
-    */
-    
-    std::cout << "returning from createCameras\n";
-    
+
+    std::cout << "Created " << mNcams << " Cameras" << std::endl;
+    mFrameOneCamera = mCameras.first();
+    if (mNcams > 1)
+        mFrameTwoCamera = mCameras.at(1);
+
     //error has occured
     return -1;
 }
@@ -528,13 +534,16 @@ void MainWindow::load() {
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
-    if (!mCameras.at(0)->isOpen())
+    debug("frame update");
+    if (!mFrameOneCamera->isOpen())
         return;
+
+
     
-    mMatOriginal = mCameras.at(0)->render();
+    mMatOriginal = mFrameOneCamera->render();
     
     if (mNcams > 1) {
-        mMatOriginal2 = mCameras.at(1)->render();
+        mMatOriginal2 = mFrameTwoCamera->render();
     }
 
 
@@ -575,6 +584,10 @@ void MainWindow::processFrameAndUpdateGUI() {
     */
     //convert and display
     cv::cvtColor(mMatOriginal, mMatOriginal, CV_BGR2RGB);
+    if (mPoped){
+        QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
+        dialog->setLabelPixmap(qimgOriginal);
+    }
     if (mNcams > 1) {
         cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
     }
