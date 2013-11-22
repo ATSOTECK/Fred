@@ -333,10 +333,18 @@ int MainWindow::getCamCount() {
 #endif
 
 int MainWindow::createCameras() {
+    ///*
     for (int i = 0; i < mNcams; i++) {
         Camera *c = new Camera(i, this);
         mCameras.append(c);
     }
+    //*/
+    /*
+    Camera *c = new Camera(0, this);
+    mCameras.append(c);
+    Camera *c1 = new Camera(1, this);
+    mCameras.append(c1);
+    */
     
     //error has occured
     return -1;
@@ -515,6 +523,9 @@ void MainWindow::load() {
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
+    if (!mCameras.at(0)->isOpen())
+        return;
+    
     mMatOriginal = mCameras.at(0)->render();
     
     if (mNcams > 1) {

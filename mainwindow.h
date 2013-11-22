@@ -107,9 +107,6 @@ private:
 
     Ui::MainWindow *ui;
 
-    cv::VideoCapture mCamera;
-    cv::VideoCapture mCamera2;
-
     cv::Mat mMatOriginal;
     cv::Mat mMatOriginal2;
     cv::Mat mMatProcessed;

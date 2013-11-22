@@ -4,7 +4,7 @@ Camera::Camera(int index, QWidget *parent) :
     QWidget(parent),
     mIndex(index)
 {
-    //open();
+    open();
 }
 
 Camera::~Camera() {
@@ -15,7 +15,7 @@ bool Camera::open() {
     if (mCamera.isOpened())
         mCamera.release();
 
-    //mCamera.open(mIndex);
+    mCamera.open(mIndex);
     setSize(640, 480);
 
     if(!mCamera.isOpened()) {
@@ -24,6 +24,10 @@ bool Camera::open() {
     }
     
     return true; 
+}
+
+bool Camera::isOpen() {
+    return mCamera.isOpened();
 }
 
 bool Camera::close() {

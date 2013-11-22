@@ -11,12 +11,12 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = Fred
 TEMPLATE = app
 
-DESTDIR = ../bin
+DESTDIR = ../FredBin
 
-MOC_DIR = ../bin/.moc
-UI_DIR = ../bin/.uic
-RCC_DIR = ../bin/.rcc
-OBJECTS_DIR = ../bin/.obj
+MOC_DIR = ../FredBin/.moc
+UI_DIR = ../FredBin/.uic
+RCC_DIR = ../FredBin/.rcc
+OBJECTS_DIR = ../FredBin/.obj
 
 SOURCES += main.cpp\
         mainwindow.cpp \
