@@ -22,6 +22,8 @@ Now you can build it. It will fail. Copy the dlls from the dlls folder into the 
 FredBin folder which should be one directory up.
 
 BUILDING MAC:
+Install Qt http://download.qt-project.org/official_releases/qt/5.1/5.1.1/qt-mac-opensource-5.1.1-clang-offline.dmg
+
 Coming up, have to re-work out how to do this. It's been about 9 months since I first built it for mac.
 
 BUILDING LINUX:
