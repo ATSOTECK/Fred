@@ -4,7 +4,8 @@ Fred
 Driver station for the SL9 krew.
 
 
-BUILDING WINDOWS:
+BUILDING WINDOWS: 
+
 You will ned Qt http://download.qt-project.org/official_releases/qt/5.1/5.1.1/qt-windows-opensource-5.1.1-msvc2010-x86-offline.exe
 OpenCV http://opencv.org/downloads.html
 And Visual Studio http://go.microsoft.com/?linkid=9709949
@@ -21,13 +22,14 @@ After that you should be in the edit more, click projects on the left and disabl
 Now you can build it. It will fail. Copy the dlls from the dlls folder into the newly created 
 FredBin folder which should be one directory up.
 
-BUILDING MAC:
+BUILDING MAC: 
+
 Install Qt http://download.qt-project.org/official_releases/qt/5.1/5.1.1/qt-mac-opensource-5.1.1-clang-offline.dmg
 
 Coming up, have to re-work out how to do this. It's been about 9 months since I first built it for mac.
 
 BUILDING LINUX:
+
 Install OpenCV.
 Install Qt.
-
 Yay it works! (Why can't windows and mac have package managers and be cool like linux?)
