@@ -1,7 +1,7 @@
 Fred
 ====
 
-Program to get coordinates from an image. Or something like that...
+Driver station for the SL9 krew.
 
 
 BUILDING WINDOWS:
