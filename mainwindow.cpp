@@ -74,7 +74,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
-    mNcams = this->getCamCount();
+    mNcams = getCamCount();
+    createCameras();
     debug(QString::number(mNcams) + " camera(s) detected.");
 
     QMenu *devicesMenu = new QMenu();
@@ -90,6 +91,7 @@ MainWindow::MainWindow(QWidget *parent) :
     
     connect(ui->menuDevices, SIGNAL(triggered(QAction*)), 
             this, SLOT(getCam(QAction*)));
+    connect(ui->actionRefresh,SIGNAL(triggered()),this,SLOT(refresh()));
     
     //QAction *testAction = new QAction("test item", this);
     //QAction *testAction1 = new QAction("another test item", this);
@@ -155,25 +157,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->commands->setAttribute(Qt::WA_MacShowFocusRect, false);
 
     mTimerTime = 16;
-    
-    if (mNcams == 3) {
-        setCamera(2, 640, 480);
-    } else {
-        setCamera(0, 640, 480);
-    }
-    
-    if (mNcams > 1) {
-        mCamera2.open(1);
-        mCamera2.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-        mCamera2.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-    }
-
-    if (mCamera.isOpened() == false) {
-        ui->console->setTextColor(mRed);
-        ui->console->append("Error: camera not accessed successfully.");
-        ui->console->setTextColor(mBlack);
-        return;
-    }
     
     Command<MainWindow> c("Find Circle", *this, &MainWindow::doCircles);
     addCommand(c);
@@ -291,6 +274,8 @@ void MainWindow::setUpCommands() {
     connect(ui->commands, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(getContextMenu(QPoint)));
 }
 
+
+
 void MainWindow::setUpActions() {
     mPauseAllCommandsAction = new QAction(tr("&Pause All Commands"), this);
     mResumeAllCommandsAction = new QAction(tr("&Resume All Commands"), this);
@@ -343,6 +328,16 @@ int MainWindow::getCamCount() {
     return (ncams - 1);
 }
 #endif
+
+int MainWindow::createCameras() {
+    for (int i = 0; i < mNcams; i++) {
+        Camera *c = new Camera(i, this);
+        mCameras.append(c);
+    }
+    
+    //error has occured
+    return -1;
+}
 
 void MainWindow::getContextMenu(const QPoint &point) {
     QTreeWidgetItem *itm = ui->commands->itemAt(point);
@@ -517,18 +512,12 @@ void MainWindow::load() {
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
-    mCamera.read(mMatOriginal);
+    mMatOriginal = mCameras.at(0)->render();
     
     if (mNcams > 1) {
-        mCamera2.read(mMatOriginal2);
+        mMatOriginal2 = mCameras.at(1)->render();
     }
 
-    if (mMatOriginal.empty()) {
-        ui->console->setTextColor(mRed);
-        ui->console->append("Error: camera not working!");
-        ui->console->setTextColor(mBlack);
-        return;
-    }
 
     //histogram
     //mHistogramDialog->updatHistogram(mMatOriginal);
@@ -585,6 +574,11 @@ void MainWindow::processFrameAndUpdateGUI() {
     } else {
         ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal));
     }
+}
+
+
+void MainWindow::refresh(){
+    this->mNcams = this->getCamCount();
 }
 
 void MainWindow::doCircles() {

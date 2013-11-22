@@ -630,7 +630,7 @@ selection-background-color: #437DCD;
      <x>0</x>
      <y>0</y>
      <width>1544</width>
-     <height>22</height>
+     <height>18</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -646,6 +646,8 @@ selection-background-color: #437DCD;
     <addaction name="actionPause"/>
     <addaction name="separator"/>
     <addaction name="actionClear_console"/>
+    <addaction name="separator"/>
+    <addaction name="actionRefresh"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -682,30 +684,6 @@ selection-background-color: #437DCD;
    <addaction name="menuDevices"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
-  </widget>
-  <widget class="QToolBar" name="mainToolBar">
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <property name="floatable">
-    <bool>false</bool>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="actionSave"/>
-   <addaction name="actionOpen"/>
-   <addaction name="separator"/>
-   <addaction name="actionStart"/>
-   <addaction name="actionPause"/>
-   <addaction name="separator"/>
-   <addaction name="actionThreshold"/>
-   <addaction name="actionHistogram"/>
-   <addaction name="actionClear_console"/>
-   <addaction name="separator"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="commandsDock">
@@ -773,6 +751,31 @@ selection-background-color: #437DCD;
      </item>
     </layout>
    </widget>
+  </widget>
+  <widget class="QToolBar" name="mainToolBar">
+   <property name="movable">
+    <bool>false</bool>
+   </property>
+   <property name="floatable">
+    <bool>false</bool>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionSave"/>
+   <addaction name="actionOpen"/>
+   <addaction name="separator"/>
+   <addaction name="actionStart"/>
+   <addaction name="actionPause"/>
+   <addaction name="separator"/>
+   <addaction name="actionThreshold"/>
+   <addaction name="actionHistogram"/>
+   <addaction name="actionClear_console"/>
+   <addaction name="separator"/>
+   <addaction name="actionRefresh"/>
   </widget>
   <action name="actionStart">
    <property name="icon">
@@ -932,6 +935,18 @@ selection-background-color: #437DCD;
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="icon">
+    <iconset resource="res.qrc">
+     <normaloff>:/Images/webcam_add.png</normaloff>:/Images/webcam_add.png</iconset>
+   </property>
+   <property name="text">
+    <string>Refresh</string>
+   </property>
+   <property name="shortcut">
+    <string>F5</string>
    </property>
   </action>
  </widget>
