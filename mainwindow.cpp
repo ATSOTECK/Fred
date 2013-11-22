@@ -42,7 +42,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mKernelSize(3),
     mStatusLabel(new QLabel),
     mSearchWidget(new SearchWidget(0, this)),
-    mSearchWidgetAdded(false)
+    mSearchWidgetAdded(false),
+    mIsRunning(false)
 {
     ui->setupUi(this);
     
@@ -75,11 +76,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionPause->setDisabled(true);
 
     mNcams = getCamCount();
-    createCameras();
     debug(QString::number(mNcams) + " camera(s) detected.");
+    createCameras();
 
     QMenu *devicesMenu = new QMenu();
-    for (int i = 0; i < mNcams; ++i) {
+    for (int i = 0; i < mNcams; i++) {
         ProjectAction *testAction = new ProjectAction(QString::number(i), this);
         testAction->setIndex(i);
         //devicesMenu->addAction(testAction);
@@ -224,6 +225,7 @@ void MainWindow::addChild(ProjectItem *parent, ProjectItem *child) {
 }
 
 void MainWindow::setCamera(int c, int w, int h) {
+    /*
     if (mCamera.isOpened())
         mCamera.release();
     
@@ -232,6 +234,7 @@ void MainWindow::setCamera(int c, int w, int h) {
     mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, h);
     
     debug("Camera set successful!");
+    */
 }
 
 void MainWindow::getCam(QAction *c) {
@@ -578,7 +581,28 @@ void MainWindow::processFrameAndUpdateGUI() {
 
 
 void MainWindow::refresh(){
-    this->mNcams = this->getCamCount();
+    bool r = false;
+    
+    //pause
+    if (mIsRunning) {
+        pauseButtonClicked();
+        r = true;
+    }
+    
+    for (int i = 0; i < mNcams; i++) {
+        Camera *c = mCameras.takeAt(i);
+        c->close();
+        delete c;
+    }
+    
+    mNcams = getCamCount();
+    debug(QString::number(mNcams) + " camera(s) detected.");
+    createCameras();
+    
+    //unpause
+    if (r) {
+        pauseButtonClicked();
+    }
 }
 
 void MainWindow::doCircles() {
@@ -628,6 +652,7 @@ void MainWindow::pauseButtonClicked() {
         ui->actionStart->setEnabled(true);
 
         debug("Pausing");
+        mIsRunning = false;
     } else {
         mTimer->start(mTimerTime);
 
@@ -635,6 +660,7 @@ void MainWindow::pauseButtonClicked() {
         ui->actionStart->setEnabled(false);
 
         debug("Resuming");
+        mIsRunning = true;
         ui->tabs->setCurrentIndex(0);
     }
 }

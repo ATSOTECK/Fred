@@ -4,7 +4,7 @@ Camera::Camera(int index, QWidget *parent) :
     QWidget(parent),
     mIndex(index)
 {
-    open();
+    //open();
 }
 
 Camera::~Camera() {
@@ -15,11 +15,11 @@ bool Camera::open() {
     if (mCamera.isOpened())
         mCamera.release();
 
-    mCamera.open(mIndex);
-    setSize(640,480);
+    //mCamera.open(mIndex);
+    setSize(640, 480);
 
     if(!mCamera.isOpened()) {
-        qDebug() << "Error: camera " << index << " could not be opened";
+        //qDebug() << "Error: camera " << index << " could not be opened";
         return false;
     }
     
@@ -39,7 +39,7 @@ cv::Mat Camera::render() {
     cv::Mat returnMat;
     mCamera.read(returnMat);
     if (returnMat.empty()) {
-        qDebug() << "Error: camera " << index << "did not recieve an image";
+        //qDebug() << "Error: camera " << index << "did not recieve an image";
     }
     
     return returnMat;

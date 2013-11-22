@@ -163,6 +163,7 @@ private:
     bool mSearchWidgetAdded;
     
     QMenu *mCameraMenu;
+    bool mIsRunning;
 };
 
 void setMainWindow(MainWindow *mw);
