@@ -9,6 +9,7 @@
 #include <QStringListModel>
 
 #include <QDebug>
+#include <iostream>
 
 
 MainWindow *w;
@@ -325,9 +326,10 @@ int MainWindow::getCamCount() {
         if (cap == NULL)
             break;
         cvReleaseCapture(&cap);
+        std::cout << "cam" << ncams << std::endl;
     }
 
-    cvReleaseCapture(&cap);
+    //cvReleaseCapture(&cap);
     return (ncams - 1);
 }
 #endif
@@ -335,6 +337,7 @@ int MainWindow::getCamCount() {
 int MainWindow::createCameras() {
     ///*
     for (int i = 0; i < mNcams; i++) {
+        std::cout << "here in createCameras " << i << std::endl;
         Camera *c = new Camera(i, this);
         mCameras.append(c);
     }
@@ -345,6 +348,8 @@ int MainWindow::createCameras() {
     Camera *c1 = new Camera(1, this);
     mCameras.append(c1);
     */
+    
+    std::cout << "returning from createCameras\n";
     
     //error has occured
     return -1;

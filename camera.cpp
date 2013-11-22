@@ -1,5 +1,7 @@
 #include "camera.h"
 
+#include <iostream>
+
 Camera::Camera(int index, QWidget *parent) :
     QWidget(parent),
     mIndex(index)
@@ -16,6 +18,9 @@ bool Camera::open() {
         mCamera.release();
 
     mCamera.open(mIndex);
+    
+    std::cout << "here in camera::open\n";
+    
     setSize(640, 480);
 
     if(!mCamera.isOpened()) {
