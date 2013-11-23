@@ -77,6 +77,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
+
     debug( "starting this");
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
@@ -118,6 +119,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSquares, SIGNAL(triggered()), this, SLOT(showSquaresClicked()));
     connect(ui->actionAboutFred, SIGNAL(triggered()), this, SLOT(aboutDialogClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
+
 
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(load()));
@@ -211,6 +213,8 @@ ProjectItem *MainWindow::addRoot(QString name, ProjectItem::Type type) {
 
     return itm;
 }
+
+
 
 void MainWindow::addChild(ProjectItem *parent, ProjectItem::Type type, QString path, QString name, QIcon &icon) {
     ProjectItem *itm = new ProjectItem();
@@ -534,12 +538,9 @@ void MainWindow::load() {
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
-    debug("frame update");
     if (!mFrameOneCamera->isOpen())
         return;
 
-
-    
     mMatOriginal = mFrameOneCamera->render();
     
     if (mNcams > 1) {
@@ -597,6 +598,7 @@ void MainWindow::processFrameAndUpdateGUI() {
     //QImage qimgOutline((uchar*)mMatOutline.data, mMatOutline.cols, mMatOutline.rows, mMatOutline.step, QImage::Format_Indexed8);
     QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
     
+
     mOutlineDialog->setLabelPixmap(qimgOutline2);
 
     ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
@@ -617,12 +619,13 @@ void MainWindow::refresh(){
         pauseButtonClicked();
         r = true;
     }
-    
-    for (int i = 0; i < mNcams; i++) {
-        Camera *c = mCameras.takeAt(i);
+    debug("closeing cameras");
+    for (int i = 0; !mCameras.isEmpty(); i++) {
+        Camera *c = mCameras.takeAt(0);
         c->close();
         delete c;
     }
+
     
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
