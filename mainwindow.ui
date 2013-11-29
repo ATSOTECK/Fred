@@ -588,6 +588,9 @@ selection-background-color: #437DCD;
             <height>600</height>
            </rect>
           </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
           <property name="autoFillBackground">
            <bool>false</bool>
           </property>
@@ -618,6 +621,9 @@ selection-background-color: #437DCD;
             <width>0</width>
             <height>0</height>
            </size>
+          </property>
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
           </property>
           <property name="autoFillBackground">
            <bool>false</bool>
@@ -693,9 +699,9 @@ selection-background-color: #437DCD;
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuHelp"/>
    <addaction name="menuView"/>
    <addaction name="menuDevices"/>
-   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="commandsDock">

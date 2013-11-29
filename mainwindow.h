@@ -10,6 +10,7 @@
 #include <QList>
 #include <QLabel>
 #include <QCompleter>
+#include <QTime>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -72,6 +73,7 @@ public slots:
     
     void getCam(QAction *c);
     void addCameraDialog(QAction *c);
+    void addCameraDialog2(QAction *c);
     
 private slots:
     void pauseButtonClicked();
@@ -91,8 +93,9 @@ private slots:
     void getContextMenu(const QPoint &point);
     
     void hideConsole();
-    
+
     void getCamOneContextMenu(const QPoint &point);
+    void getCamTwoContextMenu(const QPoint &point);
 
 private:
     ProjectItem *addRoot(QString name, ProjectItem::Type type);
@@ -137,7 +140,7 @@ private:
     
     void addCommand(Command<MainWindow> c);
     QList<Command<MainWindow> > mCommandList;
-
+    QList<int> * mFPSList;
     QList<Camera*> mCameras;
     Camera * mFrameOneCamera;
     Camera * mFrameTwoCamera;
@@ -165,7 +168,12 @@ private:
     bool mSearchWidgetAdded;
     
     QMenu *mCameraMenu;
+    QMenu *mCameraMenu2;
     bool mIsRunning;
+
+
+    QTime mTime;
+    int mFrameCount;
 };
 
 void setMainWindow(MainWindow *mw);
