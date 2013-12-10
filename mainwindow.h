@@ -10,7 +10,6 @@
 #include <QList>
 #include <QLabel>
 #include <QCompleter>
-#include <QTime>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -18,7 +17,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 
 #include "aboutdialog.h"
-#include "cameraDialog.h"
 #include "colorthresholddialog.h"
 #include "command.h"
 #include "histogramdialog.h"
@@ -56,7 +54,7 @@ public:
     void crit(const QString &msg);
     void fail(const QString &msg);
     
-    void setCamera(int frame, int camId);
+    void setCamera(int c, int w, int h);
 
 public slots:
     void processFrameAndUpdateGUI();
@@ -73,7 +71,6 @@ public slots:
     
     void getCam(QAction *c);
     void addCameraDialog(QAction *c);
-    void addCameraDialog2(QAction *c);
     
 private slots:
     void pauseButtonClicked();
@@ -93,9 +90,8 @@ private slots:
     void getContextMenu(const QPoint &point);
     
     void hideConsole();
-
+    
     void getCamOneContextMenu(const QPoint &point);
-    void getCamTwoContextMenu(const QPoint &point);
 
 private:
     ProjectItem *addRoot(QString name, ProjectItem::Type type);
@@ -134,16 +130,13 @@ private:
 
     int rMin, gMin, bMin, rMax, gMax, bMax;
     int mTimerTime, mNcams, mKernelSize;
-    bool mPoped;
 
     std::vector<std::vector<cv::Point> > mSquares;
     
     void addCommand(Command<MainWindow> c);
     QList<Command<MainWindow> > mCommandList;
-    QList<int> * mFPSList;
+
     QList<Camera*> mCameras;
-    Camera * mFrameOneCamera;
-    Camera * mFrameTwoCamera;
 
     QAction *mPauseAllCommandsAction;
     QAction *mResumeAllCommandsAction;
@@ -153,7 +146,6 @@ private:
     
     QAction *mHideConsoleAction;
 
-    CameraDialog *dialog;
     QColor mBlack;
     QColor mBlue;
     QColor mRed;
@@ -168,12 +160,7 @@ private:
     bool mSearchWidgetAdded;
     
     QMenu *mCameraMenu;
-    QMenu *mCameraMenu2;
     bool mIsRunning;
-
-
-    QTime mTime;
-    int mFrameCount;
 };
 
 void setMainWindow(MainWindow *mw);

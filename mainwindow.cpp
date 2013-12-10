@@ -44,12 +44,9 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusLabel(new QLabel),
     mSearchWidget(new SearchWidget(0, this)),
     mSearchWidgetAdded(false),
-    mIsRunning(false),
-    mPoped(false),
-    mFrameCount(0)
+    mIsRunning(false)
 {
     ui->setupUi(this);
-    this->mTime.start();
     
     qInstallMessageHandler(catchMessage);
     
@@ -79,9 +76,6 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->actionStart->setDisabled(true);
     ui->actionPause->setDisabled(true);
 
-    mFPSList = new QList<int>();
-
-    debug( "starting this");
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
     createCameras();
@@ -94,9 +88,9 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->menuDevices->addAction(testAction);
     }
     
-    //connect(devicesMenu, SIGNAL(triggered(QAction*)),
+    //connect(devicesMenu, SIGNAL(triggered(QAction*)), 
             //this, SLOT(getCam(QAction*)));
-
+    
     connect(ui->menuDevices, SIGNAL(triggered(QAction*)), 
             this, SLOT(getCam(QAction*)));
     connect(ui->actionRefresh,SIGNAL(triggered()),this,SLOT(refresh()));
@@ -122,7 +116,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSquares, SIGNAL(triggered()), this, SLOT(showSquaresClicked()));
     connect(ui->actionAboutFred, SIGNAL(triggered()), this, SLOT(aboutDialogClicked()));
     connect(ui->actionClear_console, SIGNAL(triggered()), this, SLOT(clearConsoleClicked()));
-
 
     connect(ui->actionSave, SIGNAL(triggered()), this, SLOT(save()));
     connect(ui->actionOpen, SIGNAL(triggered()), this, SLOT(load()));
@@ -177,20 +170,11 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->tabs->addTab(ui->originalImage, "a new tab");
     
     ui->originalImage->setContextMenuPolicy(Qt::CustomContextMenu);
-    ui->processedImage->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->originalImage, SIGNAL(customContextMenuRequested(QPoint)),
             this, SLOT(getCamOneContextMenu(QPoint)));
-    connect(ui->processedImage, SIGNAL(customContextMenuRequested(QPoint)),
-            this, SLOT(getCamTwoContextMenu(QPoint)));
 }
 
 MainWindow::~MainWindow() {
-
-    for (int i = 0; !mCameras.isEmpty(); i++) {
-        Camera *c = mCameras.takeAt(0);
-        c->close();
-        delete c;
-    }
     delete ui;
 }
 
@@ -226,8 +210,6 @@ ProjectItem *MainWindow::addRoot(QString name, ProjectItem::Type type) {
     return itm;
 }
 
-
-
 void MainWindow::addChild(ProjectItem *parent, ProjectItem::Type type, QString path, QString name, QIcon &icon) {
     ProjectItem *itm = new ProjectItem();
     itm->setText(0, name);
@@ -243,54 +225,35 @@ void MainWindow::addChild(ProjectItem *parent, ProjectItem *child) {
     parent->addChild(child);
 }
 
-void MainWindow::setCamera(int frame, int camera) {
-    if (frame == 1){
-        mFrameOneCamera = mCameras.at(camera);
-    }
-    else{
-        mFrameTwoCamera = mCameras.at(camera);
-    }
+void MainWindow::setCamera(int c, int w, int h) {
+    /*
+    if (mCamera.isOpened())
+        mCamera.release();
+    
+    mCamera.open(c);
+    mCamera.set(CV_CAP_PROP_FRAME_WIDTH, w);
+    mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, h);
+    
+    debug("Camera set successful!");
+    */
 }
 
-void MainWindow::getCam(QAction *c) { // change cams here
-    std::cout << "in 'getCam'";
+void MainWindow::getCam(QAction *c) {
     int n = c->text().toInt();
-    setCamera(1,n);
+    setCamera(n, 640, 480);
 }
 
 void MainWindow::addCameraDialog(QAction *c) {
     if (c->text() != "Pop") {
-        int n = c->text().toInt();
-        this->pauseButtonClicked();
-        setCamera(1,n);
-        this->pauseButtonClicked();
         return;
     }
     
-    dialog = new CameraDialog( this->mFrameOneCamera,this);
-    dialog->setLabelPixmap();
-    mPoped = true;
+    CameraDialog *dialog = new CameraDialog(this);
+    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
+    dialog->setLabelPixmap(qimgOriginal);
+    
     dialog->exec();
 }
-
-
-
-void MainWindow::addCameraDialog2(QAction *c) {
-    if (c->text() != "Pop") {
-        int n = c->text().toInt();
-        this->pauseButtonClicked();
-        setCamera(2,n);
-        this->pauseButtonClicked();
-        return;
-    }
-
-    dialog = new CameraDialog(this->mFrameTwoCamera,this);
-    dialog->setLabelPixmap();
-    mPoped = true;
-    dialog->show();
-}
-
-
 
 void MainWindow::setUpCommandDock() {
 
@@ -340,27 +303,17 @@ void MainWindow::setUpActions() {
 
 #ifdef Q_OS_WIN
 int MainWindow::getCamCount() {
-    return 2;
-    cv::VideoCapture cap;
+    CvCapture *cap;
     int ncams = 0;
     while (ncams < 6) {
-        cap.open(ncams);
-        cv::waitKey(100);
-        if (cap.isOpened()){
-            cv::Mat mat;
-            cap.read( mat);
-            if (mat.empty()){
-                 //break;
-            }
-            ncams++;
-        }else{break;}
-        cap.release();
+        cap = cvCreateCameraCapture(ncams++);
+        if (cap == NULL)
+            break;
+        cvReleaseCapture(&cap);
     }
-    if(cap.isOpened())
-        cap.release();
 
-    std::cout << "cams would be:" << ncams-1;
-    return (ncams);
+    cvReleaseCapture(&cap);
+    return (ncams - 1);
 }
 #endif
 
@@ -384,15 +337,20 @@ int MainWindow::getCamCount() {
 int MainWindow::createCameras() {
     ///*
     for (int i = 0; i < mNcams; i++) {
+        std::cout << "here in createCameras " << i << std::endl;
         Camera *c = new Camera(i, this);
         mCameras.append(c);
     }
-
-    std::cout << "Created " << mNcams << " Cameras" << std::endl;
-    mFrameOneCamera = mCameras.first();
-    if (mNcams > 1)
-        mFrameTwoCamera = mCameras.at(1);
-
+    //*/
+    /*
+    Camera *c = new Camera(0, this);
+    mCameras.append(c);
+    Camera *c1 = new Camera(1, this);
+    mCameras.append(c1);
+    */
+    
+    std::cout << "returning from createCameras\n";
+    
     //error has occured
     return -1;
 }
@@ -424,44 +382,25 @@ void MainWindow::getContextMenu(const QPoint &point) {
 
 void MainWindow::getCamOneContextMenu(const QPoint &point) {
     mCameraMenu = new QMenu(ui->originalImage);
+    QAction *action = new QAction("1", 0);
+    QAction *action2 = new QAction("2", 0);
+    QAction *action3 = new QAction("3", 0);
+    
     QAction *popOutAction = new QAction("Pop", mCameraMenu);
     
-    for (int _t = 0; _t < mNcams;_t++){
-        QAction *action = new QAction(QString::number(_t), 0);
-        mCameraMenu->addAction(action);
-    }
-
+    mCameraMenu->addAction(action);
+    mCameraMenu->addAction(action2);
+    mCameraMenu->addAction(action3);
     mCameraMenu->addSeparator();
     mCameraMenu->addAction(popOutAction);
-
+    
     connect(mCameraMenu, SIGNAL(triggered(QAction*)),
             this, SLOT(addCameraDialog(QAction*)));
-
-
-    mCameraMenu->dumpObjectInfo();
-    mCameraMenu->exec(ui->originalImage->mapToGlobal(point));
-
     
-}
-
-void MainWindow::getCamTwoContextMenu(const QPoint &point) {
-    mCameraMenu2 = new QMenu(ui->processedImage);
-    QAction *popOutAction2 = new QAction("Pop", mCameraMenu2);
-
-    for (int _t = 0; _t < mNcams;_t++){
-        QAction *action = new QAction(QString::number(_t), 0);
-        mCameraMenu2->addAction(action);
-    }
-    mCameraMenu2->addSeparator();
-    mCameraMenu2->addAction(popOutAction2);
-
-    connect(mCameraMenu2, SIGNAL(triggered(QAction*)),
-            this, SLOT(addCameraDialog2(QAction*)));
-
-
-    mCameraMenu2->dumpObjectInfo();
-    mCameraMenu2->exec(ui->processedImage->mapToGlobal(point));
-
+    mCameraMenu->dumpObjectInfo();
+    
+    mCameraMenu->exec(ui->originalImage->mapToGlobal(point));
+    
 }
 
 CodeEditor *MainWindow::addCodeEditor() {
@@ -589,19 +528,16 @@ void MainWindow::load() {
 }
 
 void MainWindow::processFrameAndUpdateGUI() {
-
-    mFPSList->append(mTime.elapsed());
-    if (mFPSList->length() > 100)
-        mFPSList->removeFirst();
-    int avg = 0;
-    for (int _t = 0; _t < mFPSList->length(); _t ++){
-        avg += mFPSList->at(_t);
+    if (!mCameras.at(0)->isOpen())
+        return;
+    
+    mMatOriginal = mCameras.at(0)->render();
+    
+    if (mNcams > 1) {
+        mMatOriginal2 = mCameras.at(1)->render();
     }
-    qDebug() << "FPS: " << 1.0 / ((avg / float(mFPSList->length()))/1000.0) ;
-    mTime.restart();
 
-    for(int _t = 0; _t < mCameras.length(); _t ++)
-        mCameras.at(_t)->render();
+
     //histogram
     //mHistogramDialog->updatHistogram(mMatOriginal);
     /*
@@ -613,7 +549,8 @@ void MainWindow::processFrameAndUpdateGUI() {
         }
     }
     */
-
+    
+    doOutline();
 
     //mSquaresDialog->findSquares(mMatProcessed, mSquares);
     //mSquaresDialog->drawSquares(mMatOriginal, mSquares);
@@ -637,19 +574,25 @@ void MainWindow::processFrameAndUpdateGUI() {
     }
     */
     //convert and display
-    if (mPoped){
-        dialog->setLabelPixmap(/*qimgOriginal*/);
+    cv::cvtColor(mMatOriginal, mMatOriginal, CV_BGR2RGB);
+    if (mNcams > 1) {
+        cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
     }
 
-    if (!mOutlineDialog->isHidden()){
-        qDebug() << "not Hiden muhahha";
-        this->doOutline();
-        QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
-        mOutlineDialog->setLabelPixmap(qimgOutline2);
-    }
+    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
+    QImage qimgProcessed((uchar*)mMatProcessed.data, mMatProcessed.cols, mMatProcessed.rows, mMatProcessed.step, QImage::Format_Indexed8);
+    //QImage qimgOutline((uchar*)mMatOutline.data, mMatOutline.cols, mMatOutline.rows, mMatOutline.step, QImage::Format_Indexed8);
+    QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
+    
+    mOutlineDialog->setLabelPixmap(qimgOutline2);
 
-    ui->originalImage->setPixmap(this->mFrameOneCamera->getPix());
-    ui->processedImage->setPixmap(mFrameTwoCamera->getPix());
+    ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
+    if (mNcams >1) {
+        QImage qimgOriginal2((uchar*)mMatOriginal2.data, mMatOriginal2.cols, mMatOriginal2.rows, mMatOriginal2.step, QImage::Format_RGB888);
+        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal2));
+    } else {
+        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal));
+    }
 }
 
 
@@ -661,13 +604,12 @@ void MainWindow::refresh(){
         pauseButtonClicked();
         r = true;
     }
-    debug("closeing cameras");
-    for (int i = 0; !mCameras.isEmpty(); i++) {
-        Camera *c = mCameras.takeAt(0);
+    
+    for (int i = 0; i < mNcams; i++) {
+        Camera *c = mCameras.takeAt(i);
         c->close();
         delete c;
     }
-
     
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
@@ -700,7 +642,6 @@ void MainWindow::doCircles() {
 
 void MainWindow::doOutline() {
     //outline
-    mMatOriginal = mFrameOneCamera->get().clone(); // protect encapsulation
     mMatOutline.create(mMatOriginal.size(), mMatOriginal.type());
 
     cv::cvtColor(mMatOriginal, mMatGray, CV_BGR2GRAY);
