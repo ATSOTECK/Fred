@@ -334,7 +334,7 @@ int MainWindow::getCamCount() {
 }
 #endif
 
-int MainWindow::createCameras() {
+void MainWindow::createCameras() {
     ///*
     for (int i = 0; i < mNcams; i++) {
         std::cout << "here in createCameras " << i << std::endl;
@@ -352,7 +352,6 @@ int MainWindow::createCameras() {
     std::cout << "returning from createCameras\n";
     
     //error has occured
-    return -1;
 }
 
 void MainWindow::getContextMenu(const QPoint &point) {
@@ -605,11 +604,15 @@ void MainWindow::refresh(){
         r = true;
     }
     
-    for (int i = 0; i < mNcams; i++) {
+    debug("closing");
+    std::cout << mNcams << std::endl;
+    for (int i = 0; !mCameras.isEmpty(); i++) {
+        std::cout << i << std::endl;
         Camera *c = mCameras.takeAt(i);
         c->close();
         delete c;
     }
+    debug("closed");
     
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");

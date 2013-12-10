@@ -47,7 +47,7 @@ public:
     };
 
     int getCamCount();
-    int createCameras();
+    void createCameras();
     
     void debug(const QString &msg);
     void warn(const QString &msg);
