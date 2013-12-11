@@ -337,8 +337,8 @@ int MainWindow::getCamCount() {
 void MainWindow::createCameras() {
     ///*
     for (int i = 0; i < mNcams; i++) {
-        std::cout << "here in createCameras " << i << std::endl;
         Camera *c = new Camera(i, this);
+        std::cout << "here in createCameras " << i << std::endl;
         mCameras.append(c);
     }
     //*/
@@ -605,17 +605,20 @@ void MainWindow::refresh(){
     }
     
     debug("closing");
-    std::cout << mNcams << std::endl;
+    std::cout << mNcams << "cams" << std::endl;
     for (int i = 0; !mCameras.isEmpty(); i++) {
         std::cout << i << std::endl;
-        Camera *c = mCameras.takeAt(i);
+        Camera *c = mCameras.takeAt(0);
+        std::cout << "pre close" << std::endl;
         c->close();
+        std::cout << "close" << std::endl;
         delete c;
     }
     debug("closed");
     
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
+    std::cout << mNcams << "detected\n";
     createCameras();
     
     //unpause
