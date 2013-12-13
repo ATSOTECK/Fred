@@ -161,6 +161,7 @@ private:
     
     QMenu *mCameraMenu;
     bool mIsRunning;
+    bool mPoped;
 };
 
 void setMainWindow(MainWindow *mw);

@@ -44,7 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusLabel(new QLabel),
     mSearchWidget(new SearchWidget(0, this)),
     mSearchWidgetAdded(false),
-    mIsRunning(false)
+    mIsRunning(false),
+    mPoped(false)
 {
     ui->setupUi(this);
     
@@ -245,14 +246,19 @@ void MainWindow::getCam(QAction *c) {
 
 void MainWindow::addCameraDialog(QAction *c) {
     if (c->text() != "Pop") {
-        return;
-    }
-    
-    CameraDialog *dialog = new CameraDialog(this);
-    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
-    dialog->setLabelPixmap(qimgOriginal);
-    
-    dialog->exec();
+            /*
+            int n = c->text().toInt();
+            this->pauseButtonClicked();
+            setCamera(1,n);
+            this->pauseButtonClicked();
+            */
+            return;
+        }
+        
+        CameraDialog *dialog = new CameraDialog(mCameras.at(0) ,this);
+        dialog->setLabelPixmap();
+        mPoped = true;
+        dialog->exec();
 }
 
 void MainWindow::setUpCommandDock() {
