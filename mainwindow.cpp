@@ -530,67 +530,25 @@ void MainWindow::processFrameAndUpdateGUI() {
     if (!mCameras.at(0)->isOpen())
         return;
     
-    mMatOriginal = mCameras.at(0)->render();
+    for (int i = 0; i <mCameras.size(); i++) {
+        mCameras.at(i)->render();
+    }
+    
+    ui->originalImage->setPixmap(mCameras.at(0)->getPix());
     
     if (mNcams > 1) {
-        mMatOriginal2 = mCameras.at(1)->render();
-    }
-
-
-    //histogram
-    //mHistogramDialog->updatHistogram(mMatOriginal);
-    /*
-    int size = mCommandList.size();
-    for (int i = 0; i < size; ++i) {
-        Command<MainWindow> c = mCommandList.at(i);
-        if (!c.isPaused() && !c.isRunning()) {
-            c.update();
-        }
-    }
-    */
-    
-    doOutline();
-
-    //mSquaresDialog->findSquares(mMatProcessed, mSquares);
-    //mSquaresDialog->drawSquares(mMatOriginal, mSquares);
-
-    //0, 120, 0     170, 256, 40 for the green thing
-    /*
-    cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
-    cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
-    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10, 400);
-
-    for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
-        ui->console->setTextColor(mGreen);
-        ui->console->append("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
-                ", y =" + QString::number((*itrCircles)[1]).rightJustified(4, ' ') +
-                ", radius =" + QString::number((*itrCircles)[2], 'f', 3).rightJustified(7, ' '));
-
-        ui->console->setTextColor(mBlack);
-
-        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
-        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
-    }
-    */
-    //convert and display
-    cv::cvtColor(mMatOriginal, mMatOriginal, CV_BGR2RGB);
-    if (mNcams > 1) {
-        cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
-    }
-
-    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
-    QImage qimgProcessed((uchar*)mMatProcessed.data, mMatProcessed.cols, mMatProcessed.rows, mMatProcessed.step, QImage::Format_Indexed8);
-    //QImage qimgOutline((uchar*)mMatOutline.data, mMatOutline.cols, mMatOutline.rows, mMatOutline.step, QImage::Format_Indexed8);
-    QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
-    
-    mOutlineDialog->setLabelPixmap(qimgOutline2);
-
-    ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
-    if (mNcams >1) {
-        QImage qimgOriginal2((uchar*)mMatOriginal2.data, mMatOriginal2.cols, mMatOriginal2.rows, mMatOriginal2.step, QImage::Format_RGB888);
-        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal2));
+        ui->processedImage->setPixmap(mCameras.at(1)->getPix());
     } else {
-        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal));
+        ui->processedImage->setPixmap(mCameras.at(0)->getPix());
+    }
+    
+    //needs updating V
+    //mHistogramDialog->updatHistogram(mMatOriginal);
+    
+    if (mOutlineDialog->isVisible()) {
+        doOutline();
+        QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
+        mOutlineDialog->setLabelPixmap(qimgOutline2);
     }
 }
 
@@ -648,6 +606,7 @@ void MainWindow::doCircles() {
 
 void MainWindow::doOutline() {
     //outline
+    mMatOriginal = mCameras.at(0)->get().clone();
     mMatOutline.create(mMatOriginal.size(), mMatOriginal.type());
 
     cv::cvtColor(mMatOriginal, mMatGray, CV_BGR2GRAY);
