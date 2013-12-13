@@ -45,7 +45,9 @@ MainWindow::MainWindow(QWidget *parent) :
     mSearchWidget(new SearchWidget(0, this)),
     mSearchWidgetAdded(false),
     mIsRunning(false),
-    mPoped(false)
+    mPoped(false),
+    mFPS(new FPS()),
+    mFPSTimer(new QTimer(this))
 {
     ui->setupUi(this);
     
@@ -166,6 +168,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mTimer = new QTimer(this);
     connect(mTimer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
+    connect(mFPSTimer, SIGNAL(timeout()), this, SLOT(displayFPS()));
     //timer->start(timerTime);
     
     //ui->tabs->addTab(ui->originalImage, "a new tab");
@@ -556,6 +559,16 @@ void MainWindow::processFrameAndUpdateGUI() {
         QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
         mOutlineDialog->setLabelPixmap(qimgOutline2);
     }
+    
+    updateFPS();
+}
+
+void MainWindow::updateFPS() {
+    mFPS->update();
+}
+
+void MainWindow::displayFPS() {
+    debug(QString::number(mFPS->getFPS()));
 }
 
 
@@ -634,6 +647,7 @@ void MainWindow::updateStatusLabel(const QString &text) {
 void MainWindow::pauseButtonClicked() {
     if (!ui->actionStart->isEnabled()) {
         mTimer->stop();
+        mFPSTimer->stop();
 
         ui->actionPause->setDisabled(true);
         ui->actionStart->setEnabled(true);
@@ -642,6 +656,7 @@ void MainWindow::pauseButtonClicked() {
         mIsRunning = false;
     } else {
         mTimer->start(mTimerTime);
+        mFPSTimer->start(1000);
 
         ui->actionPause->setDisabled(false);
         ui->actionStart->setEnabled(false);
