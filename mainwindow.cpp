@@ -47,7 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
     mIsRunning(false),
     mPoped(false),
     mFPS(new FPS()),
-    mFPSTimer(new QTimer(this))
+    mFPSTimer(new QTimer(this)),
+    mFPSLabel(new QLabel("0", this))
 {
     ui->setupUi(this);
     
@@ -170,6 +171,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(mTimer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
     connect(mFPSTimer, SIGNAL(timeout()), this, SLOT(displayFPS()));
     //timer->start(timerTime);
+    ui->statusBar->addWidget(mFPSLabel);
     
     //ui->tabs->addTab(ui->originalImage, "a new tab");
     
@@ -568,7 +570,7 @@ void MainWindow::updateFPS() {
 }
 
 void MainWindow::displayFPS() {
-    debug(QString::number(mFPS->getFPS()));
+    mFPSLabel->setText("FPS: " + QString::number(mFPS->getFPS()));
 }
 
 

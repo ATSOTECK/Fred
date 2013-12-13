@@ -169,6 +169,7 @@ private:
     
     FPS *mFPS;
     QTimer *mFPSTimer;
+    QLabel *mFPSLabel;
 };
 
 void setMainWindow(MainWindow *mw);
