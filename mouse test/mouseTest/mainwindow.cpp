@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-QWindow *MainWindow::windowForWidget(const QWidget* widget) {
+static QWindow *windowForWidget(const QWidget* widget) {
     QWindow* window = widget->windowHandle();
     if (window)
         return window;
@@ -11,8 +11,8 @@ QWindow *MainWindow::windowForWidget(const QWidget* widget) {
     return 0;
 }
 
-HWND MainWindow::getHWNDForWidget(const QWidget* widget) {
-    QWindow* window = windowForWidget(widget);
+HWND getHWNDForWidget(const QWidget* widget) {
+    QWindow* window = ::windowForWidget(widget);
     if (window) {
         QPlatformNativeInterface *qinterface = QGuiApplication::platformNativeInterface();
         return static_cast<HWND>(qinterface->nativeResourceForWindow(QByteArrayLiteral("handle"), window));
@@ -26,9 +26,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    
+    //int i
 
     if (!initMouse()) {
-        QMessageBox::warning(this, tr("ERROR!"), tr("Mouse init failed!\nNo mouse!"));
         return;
     }
 }
@@ -37,23 +38,35 @@ MainWindow::~MainWindow() {
     delete ui;
 }
 
+void MainWindow::setHWND(HWND hwnd) {
+    mhwnd = hwnd;
+}
+
 int MainWindow::initMouse() {
-    HWND hwnd = getHWNDForWidget(this);
-    SiOpenData data;
-    
-    if (SiInitialize() == SPW_DLL_LOAD_ERROR) {
-        QMessageBox::warning(this, "ERROR", "No DLL");
+    if (mhwnd == 0) {
+        QMessageBox::warning(this, tr("ERROR!"), tr("Unable to get window handle!"));
+        return 0;
     }
     
-    SiOpenWinInit(&data, hwnd);
+    SiOpenData data;
+    
+    SpwRetVal val;
+    
+    //0 is no error
+    val = SiInitialize();
+    if ((int)val > 0) {
+        QMessageBox::warning(this, "ERROR", "ERROR " + QString::number((int)val));
+        return 0;
+    }
+    
+    SiOpenWinInit(&data, mhwnd);
     SiSetUiMode(mDevHdl, SI_UI_ALL_CONTROLS);
     
-    if ((mDevHdl = SiOpen("3DTest", SI_ANY_DEVICE, SI_NO_MASK, SI_NOT_EVENT, &data)) == NULL) {
+    if ((mDevHdl = SiOpen("mouseTest", SI_ANY_DEVICE, SI_NO_MASK, SI_EVENT, &data)) == NULL) {
         //Will fail if not plugged in.
+        QMessageBox::warning(this, tr("ERROR!"), tr("Mouse init failed!\nNo mouse!"));
         SiTerminate();
         return 0;
-    } else {
-        return 1;
     }
     
     return dispatchLoopNT();
@@ -102,13 +115,13 @@ void MainWindow::handleMotionEvent(SiSpwEvent *e) {
     
     int len0, len1, len2, len3, len4, len5, len6;
     
-    len0 = _stprintf(buff0, "TX: %d", e->u.spwData.mData[SI_TX]);
-    len1 = _stprintf(buff1, "TY: %d", e->u.spwData.mData[SI_TY]);
-    len2 = _stprintf(buff2, "TZ: %d", e->u.spwData.mData[SI_TZ]);
-    len3 = _stprintf(buff3, "RX: %d", e->u.spwData.mData[SI_RX]);
-    len4 = _stprintf(buff4, "RY: %d", e->u.spwData.mData[SI_RY]);
-    len5 = _stprintf(buff5, "RZ: %d", e->u.spwData.mData[SI_RZ]);
-    len6 = _stprintf(buff6, " P: %d", e->u.spwData.period);
+    len0 = sprintf_s(buff0, "TX: %d", e->u.spwData.mData[SI_TX]);
+    len1 = sprintf_s(buff1, "TY: %d", e->u.spwData.mData[SI_TY]);
+    len2 = sprintf_s(buff2, "TZ: %d", e->u.spwData.mData[SI_TZ]);
+    len3 = sprintf_s(buff3, "RX: %d", e->u.spwData.mData[SI_RX]);
+    len4 = sprintf_s(buff4, "RY: %d", e->u.spwData.mData[SI_RY]);
+    len5 = sprintf_s(buff5, "RZ: %d", e->u.spwData.mData[SI_RZ]);
+    len6 = sprintf_s(buff6, " P: %d", e->u.spwData.period);
 }
 
 

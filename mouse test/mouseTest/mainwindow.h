@@ -18,6 +18,10 @@ namespace Ui {
 class MainWindow;
 }
 
+//HWND hwnd;
+static QWindow* windowForWidget(const QWidget* widget);
+HWND getHWNDForWidget(const QWidget* widget);
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -25,6 +29,8 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
+    
+    void setHWND(HWND hwnd);
     
     int initMouse();
     
@@ -39,9 +45,10 @@ public:
     void handleDeviceChangeEvent(SiSpwEvent *e);
 
 private:
-    QWindow* windowForWidget(const QWidget* widget);
-    HWND getHWNDForWidget(const QWidget* widget);
+    //QWindow* windowForWidget(const QWidget* widget);
+    //HWND getHWNDForWidget(const QWidget* widget);
     
+    HWND mhwnd;
     SiHdl mDevHdl;
 
     Ui::MainWindow *ui;
