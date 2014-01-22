@@ -122,6 +122,8 @@ void MainWindow::handleMotionEvent(SiSpwEvent *e) {
     len4 = sprintf_s(buff4, "RY: %d", e->u.spwData.mData[SI_RY]);
     len5 = sprintf_s(buff5, "RZ: %d", e->u.spwData.mData[SI_RZ]);
     len6 = sprintf_s(buff6, " P: %d", e->u.spwData.period);
+    
+    ui->lblTX->setText("TX: " + QString::number(len0));
 }
 
 
