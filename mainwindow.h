@@ -25,6 +25,7 @@
 #include "projectItem.h"
 #include "projectAction.h"
 #include "camera.h"
+#include "fps.h"
 
 namespace Ui {
 class MainWindow;
@@ -47,7 +48,7 @@ public:
     };
 
     int getCamCount();
-    int createCameras();
+    void createCameras();
     
     void debug(const QString &msg);
     void warn(const QString &msg);
@@ -71,6 +72,9 @@ public slots:
     
     void getCam(QAction *c);
     void addCameraDialog(QAction *c);
+    
+    void updateFPS();
+    void displayFPS();
     
 private slots:
     void pauseButtonClicked();
@@ -161,6 +165,11 @@ private:
     
     QMenu *mCameraMenu;
     bool mIsRunning;
+    bool mPoped;
+    
+    FPS *mFPS;
+    QTimer *mFPSTimer;
+    QLabel *mFPSLabel;
 };
 
 void setMainWindow(MainWindow *mw);

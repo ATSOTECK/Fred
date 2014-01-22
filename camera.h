@@ -20,12 +20,16 @@ public:
     bool open();
     bool isOpen();
     bool close();
-    cv::Mat render();
+    void render();
+    cv::Mat get();
+    QPixmap getPix();
     void setSize(int x, int y);
 
 private:
     cv::VideoCapture mCamera;
     int mIndex;
+    cv::Mat mMat;
+    QPixmap mPixmap;
 };
 
 #endif // CAMERA_H

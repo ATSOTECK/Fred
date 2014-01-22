@@ -33,7 +33,8 @@ SOURCES += main.cpp\
     projectItem.cpp \
     projectAction.cpp \
     cameraDialog.cpp \
-    camera.cpp
+    camera.cpp \
+    fps.cpp
 
 HEADERS  += mainwindow.h \
     colorthresholddialog.h \
@@ -49,7 +50,8 @@ HEADERS  += mainwindow.h \
     projectItem.h \
     projectAction.h \
     cameraDialog.h \
-    camera.h
+    camera.h \
+    fps.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \

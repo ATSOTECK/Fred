@@ -44,7 +44,11 @@ MainWindow::MainWindow(QWidget *parent) :
     mStatusLabel(new QLabel),
     mSearchWidget(new SearchWidget(0, this)),
     mSearchWidgetAdded(false),
-    mIsRunning(false)
+    mIsRunning(false),
+    mPoped(false),
+    mFPS(new FPS()),
+    mFPSTimer(new QTimer(this)),
+    mFPSLabel(new QLabel("0", this))
 {
     ui->setupUi(this);
     
@@ -165,7 +169,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mTimer = new QTimer(this);
     connect(mTimer, SIGNAL(timeout()), this, SLOT(processFrameAndUpdateGUI()));
+    connect(mFPSTimer, SIGNAL(timeout()), this, SLOT(displayFPS()));
     //timer->start(timerTime);
+    ui->statusBar->addWidget(mFPSLabel);
     
     //ui->tabs->addTab(ui->originalImage, "a new tab");
     
@@ -245,14 +251,19 @@ void MainWindow::getCam(QAction *c) {
 
 void MainWindow::addCameraDialog(QAction *c) {
     if (c->text() != "Pop") {
-        return;
-    }
-    
-    CameraDialog *dialog = new CameraDialog(this);
-    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
-    dialog->setLabelPixmap(qimgOriginal);
-    
-    dialog->exec();
+            /*
+            int n = c->text().toInt();
+            this->pauseButtonClicked();
+            setCamera(1,n);
+            this->pauseButtonClicked();
+            */
+            return;
+        }
+        
+        CameraDialog *dialog = new CameraDialog(mCameras.at(0) ,this);
+        dialog->setLabelPixmap();
+        mPoped = true;
+        dialog->exec();
 }
 
 void MainWindow::setUpCommandDock() {
@@ -334,11 +345,11 @@ int MainWindow::getCamCount() {
 }
 #endif
 
-int MainWindow::createCameras() {
+void MainWindow::createCameras() {
     ///*
     for (int i = 0; i < mNcams; i++) {
-        std::cout << "here in createCameras " << i << std::endl;
         Camera *c = new Camera(i, this);
+        std::cout << "here in createCameras " << i << std::endl;
         mCameras.append(c);
     }
     //*/
@@ -352,7 +363,6 @@ int MainWindow::createCameras() {
     std::cout << "returning from createCameras\n";
     
     //error has occured
-    return -1;
 }
 
 void MainWindow::getContextMenu(const QPoint &point) {
@@ -531,68 +541,36 @@ void MainWindow::processFrameAndUpdateGUI() {
     if (!mCameras.at(0)->isOpen())
         return;
     
-    mMatOriginal = mCameras.at(0)->render();
+    for (int i = 0; i <mCameras.size(); i++) {
+        mCameras.at(i)->render();
+    }
+    
+    ui->originalImage->setPixmap(mCameras.at(0)->getPix());
     
     if (mNcams > 1) {
-        mMatOriginal2 = mCameras.at(1)->render();
-    }
-
-
-    //histogram
-    //mHistogramDialog->updatHistogram(mMatOriginal);
-    /*
-    int size = mCommandList.size();
-    for (int i = 0; i < size; ++i) {
-        Command<MainWindow> c = mCommandList.at(i);
-        if (!c.isPaused() && !c.isRunning()) {
-            c.update();
-        }
-    }
-    */
-    
-    doOutline();
-
-    //mSquaresDialog->findSquares(mMatProcessed, mSquares);
-    //mSquaresDialog->drawSquares(mMatOriginal, mSquares);
-
-    //0, 120, 0     170, 256, 40 for the green thing
-    /*
-    cv::inRange(matOriginal, cv::Scalar(bMin, gMin, rMin), cv::Scalar(bMax, gMax, rMax), matProcessed);
-    cv::GaussianBlur(matProcessed, matProcessed, cv::Size(9, 9), 1.5);
-    cv::HoughCircles(matProcessed, vecCircles, CV_HOUGH_GRADIENT, 2, matProcessed.rows / 4, 100, 50, 10, 400);
-
-    for (itrCircles = vecCircles.begin(); itrCircles != vecCircles.end(); itrCircles++) {
-        ui->console->setTextColor(mGreen);
-        ui->console->append("pos x =" + QString::number((*itrCircles)[0]).rightJustified(4, ' ') +
-                ", y =" + QString::number((*itrCircles)[1]).rightJustified(4, ' ') +
-                ", radius =" + QString::number((*itrCircles)[2], 'f', 3).rightJustified(7, ' '));
-
-        ui->console->setTextColor(mBlack);
-
-        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), 3, cv::Scalar(0, 255, 0), CV_FILLED);
-        cv::circle(matOriginal, cv::Point((int)(*itrCircles)[0], (int)(*itrCircles)[1]), (int)(*itrCircles)[2], cv::Scalar(0, 0, 255), 3);
-    }
-    */
-    //convert and display
-    cv::cvtColor(mMatOriginal, mMatOriginal, CV_BGR2RGB);
-    if (mNcams > 1) {
-        cv::cvtColor(mMatOriginal2, mMatOriginal2, CV_BGR2RGB);
-    }
-
-    QImage qimgOriginal((uchar*)mMatOriginal.data, mMatOriginal.cols, mMatOriginal.rows, mMatOriginal.step, QImage::Format_RGB888);
-    QImage qimgProcessed((uchar*)mMatProcessed.data, mMatProcessed.cols, mMatProcessed.rows, mMatProcessed.step, QImage::Format_Indexed8);
-    //QImage qimgOutline((uchar*)mMatOutline.data, mMatOutline.cols, mMatOutline.rows, mMatOutline.step, QImage::Format_Indexed8);
-    QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
-    
-    mOutlineDialog->setLabelPixmap(qimgOutline2);
-
-    ui->originalImage->setPixmap(QPixmap::fromImage(qimgOriginal));
-    if (mNcams >1) {
-        QImage qimgOriginal2((uchar*)mMatOriginal2.data, mMatOriginal2.cols, mMatOriginal2.rows, mMatOriginal2.step, QImage::Format_RGB888);
-        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal2));
+        ui->processedImage->setPixmap(mCameras.at(1)->getPix());
     } else {
-        ui->processedImage->setPixmap(QPixmap::fromImage(qimgOriginal));
+        ui->processedImage->setPixmap(mCameras.at(0)->getPix());
     }
+    
+    //needs updating V
+    //mHistogramDialog->updatHistogram(mMatOriginal);
+    
+    if (mOutlineDialog->isVisible()) {
+        doOutline();
+        QImage qimgOutline2((uchar*)mMatDetectedEdges.data, mMatDetectedEdges.cols, mMatDetectedEdges.rows, mMatDetectedEdges.step, QImage::Format_Indexed8);
+        mOutlineDialog->setLabelPixmap(qimgOutline2);
+    }
+    
+    updateFPS();
+}
+
+void MainWindow::updateFPS() {
+    mFPS->update();
+}
+
+void MainWindow::displayFPS() {
+    mFPSLabel->setText("FPS: " + QString::number(mFPS->getFPS()));
 }
 
 
@@ -605,14 +583,21 @@ void MainWindow::refresh(){
         r = true;
     }
     
-    for (int i = 0; i < mNcams; i++) {
-        Camera *c = mCameras.takeAt(i);
+    debug("closing");
+    std::cout << mNcams << "cams" << std::endl;
+    for (int i = 0; !mCameras.isEmpty(); i++) {
+        std::cout << i << std::endl;
+        Camera *c = mCameras.takeAt(0);
+        std::cout << "pre close" << std::endl;
         c->close();
+        std::cout << "close" << std::endl;
         delete c;
     }
+    debug("closed");
     
     mNcams = getCamCount();
     debug(QString::number(mNcams) + " camera(s) detected.");
+    std::cout << mNcams << "detected\n";
     createCameras();
     
     //unpause
@@ -642,6 +627,7 @@ void MainWindow::doCircles() {
 
 void MainWindow::doOutline() {
     //outline
+    mMatOriginal = mCameras.at(0)->get().clone();
     mMatOutline.create(mMatOriginal.size(), mMatOriginal.type());
 
     cv::cvtColor(mMatOriginal, mMatGray, CV_BGR2GRAY);
@@ -663,6 +649,7 @@ void MainWindow::updateStatusLabel(const QString &text) {
 void MainWindow::pauseButtonClicked() {
     if (!ui->actionStart->isEnabled()) {
         mTimer->stop();
+        mFPSTimer->stop();
 
         ui->actionPause->setDisabled(true);
         ui->actionStart->setEnabled(true);
@@ -671,6 +658,7 @@ void MainWindow::pauseButtonClicked() {
         mIsRunning = false;
     } else {
         mTimer->start(mTimerTime);
+        mFPSTimer->start(1000);
 
         ui->actionPause->setDisabled(false);
         ui->actionStart->setEnabled(false);

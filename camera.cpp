@@ -44,14 +44,19 @@ bool Camera::close() {
     return false;
 }
 
-cv::Mat Camera::render() {
-    cv::Mat returnMat;
-    mCamera.read(returnMat);
-    if (returnMat.empty()) {
-        //qDebug() << "Error: camera " << index << "did not recieve an image";
-    }
-    
-    return returnMat;
+void Camera::render() {
+    mCamera.read(mMat);
+    cv::cvtColor(mMat, mMat, CV_BGR2RGB);
+    mPixmap = QPixmap::fromImage( QImage((uchar*)mMat.data, mMat.cols, mMat.rows, mMat.step, QImage::Format_RGB888));
+    cv::cvtColor(mMat,mMat,CV_RGB2BGR);
+}
+
+cv::Mat Camera::get(){ // carefull this function breaks encapulation
+    return mMat;
+}
+
+QPixmap Camera::getPix(){
+    return mPixmap;
 }
 
 void Camera::setSize(int x, int y) {
