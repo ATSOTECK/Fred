@@ -1,0 +1,10 @@
+*.exe
+*.obj
+*.makefile
+*.MAKEFILE
+*.manifest
+*.exe_manifest
+*.ilk
+*.pdb
+*.DEBUG
+*.Release
