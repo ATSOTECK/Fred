@@ -145,7 +145,7 @@ void Sender::sendDatagram()
     QClipboard *cb = QApplication::clipboard();
     //hapens here
 
-    //QString motorEncoding = convertMouseHTTPtoMotorHTTP( cb -> text() );
+    //QString motorEncoding = convertMouseHTTPtoMotorHTTP(cb->text());
     QString motorEncoding = convertMouseHTTPtoMotorHTTP( "?TX=" + QString::number(x) + "&TY="+QString::number(y)+"&TZ="+QString::number(z)+"&RX=0&RY=0&RZ=0" );
     qDebug() << "?TX=" + QString::number(x) + "&TY="+QString::number(y)+"&TZ="+QString::number(z);
     statusLabel->setText(motorEncoding);

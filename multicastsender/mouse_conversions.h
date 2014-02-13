@@ -12,6 +12,8 @@ static const float MIN_MOTOR_VALUE = 1.0;
 
 static const int NMOTORS = 8;
 
+#include <QtCore/qmath.h>
+
 /*
 Data received from 3d mouse.
 range: -350 : +350
@@ -201,7 +203,7 @@ QString formatMotorToHTTP(const MotorState& dat)
                 .append("m")
                 .append(QString().setNum(i))
                 .append("=")
-                .append(QString().setNum((int)std::floor(dat.data[i])));
+                .append(QString().setNum((int)qFloor(dat.data[i])));
     }
 
     return result;
