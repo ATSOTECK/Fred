@@ -8,3 +8,4 @@
 *.pdb
 *.DEBUG
 *.Release
+*.user
