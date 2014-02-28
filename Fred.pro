@@ -51,7 +51,8 @@ HEADERS  += mainwindow.h \
     projectAction.h \
     cameraDialog.h \
     camera.h \
-    fps.h
+    fps.h \
+    stereo.h
 
 FORMS    += mainwindow.ui \
     colorthresholddialog.ui \
