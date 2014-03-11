@@ -157,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
     mSearchWidget->setVisible(false);
     mSearchWidget->setCodeEditor(mMainCodeEditor);
     
-    mStatusLabel->setText("");
+    mStatusLabel->setText("FPS: ");
     ui->statusBar->addWidget(mStatusLabel);
     
     ui->commands->setAttribute(Qt::WA_MacShowFocusRect, false);
@@ -570,7 +570,7 @@ void MainWindow::updateFPS() {
 }
 
 void MainWindow::displayFPS() {
-    mFPSLabel->setText("FPS: " + QString::number(mFPS->getFPS()));
+    mFPSLabel->setText(QString::number(mFPS->getFPS()));
 }
 
 
